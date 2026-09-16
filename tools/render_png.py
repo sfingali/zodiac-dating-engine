@@ -157,6 +157,17 @@ def main() -> int:
     ap.add_argument("--dpi", type=int, default=200)
     ap.add_argument("--width", type=float, default=13.0)
     ap.add_argument("--height", type=float, default=8.6)
+    # comparison: draw a second instant as hollow markers on the same wheel, so
+    # "does it look the same after one cycle" is answered by the plate itself
+    ap.add_argument("--compare-jd", type=float, help="second instant, TT")
+    ap.add_argument("--compare-year", type=int)
+    ap.add_argument("--compare-month", type=int, default=1)
+    ap.add_argument("--compare-day", type=int, default=1)
+    ap.add_argument("--compare-hour", type=int, default=0)
+    ap.add_argument("--compare-minute", type=int, default=0)
+    ap.add_argument("--compare-kernel", help="ephemeris for the second instant")
+    ap.add_argument("--compare-label", default="earlier",
+                    help="what the second instant is, for the columns")
     args = ap.parse_args()
 
     eph = load_ephemeris(args.kernel) if args.kernel else load_ephemeris()
@@ -181,10 +192,27 @@ def main() -> int:
     spec = Spec.from_dict(json.load(open(args.spec))) if args.spec else None
     order = [b for b in BODIES if b in lon]
 
+    # ---- optional second instant ------------------------------------------
+    cmp_jd = None
+    lon2: dict[str, float] = {}
+    lat2: dict[str, float] = {}
+    comparing = args.compare_jd is not None or args.compare_year is not None
+    if comparing:
+        eph2 = load_ephemeris(args.compare_kernel) if args.compare_kernel else eph
+        if args.compare_jd is not None:
+            cmp_jd = float(args.compare_jd)
+        else:
+            cmp_jd = float(eph2.ts.utc(args.compare_year, args.compare_month,
+                                       args.compare_day, args.compare_hour,
+                                       args.compare_minute).tt)
+        c2 = eph2.coordinates(np.array([cmp_jd]))
+        lon2 = {b: float(np.asarray(c2[b][0]).reshape(-1)[0]) for b in BODIES}
+        lat2 = {b: float(np.asarray(c2[b][1]).reshape(-1)[0]) for b in BODIES}
+
     # ---- figure -----------------------------------------------------------
     fig = plt.figure(figsize=(args.width, args.height), dpi=args.dpi)
     fig.patch.set_facecolor(GROUND)
-    ax = fig.add_axes([0.005, 0.045, 0.700, 0.905])
+    ax = fig.add_axes([0.005, 0.045, 0.640 if comparing else 0.700, 0.905])
     ax.set_facecolor(GROUND)
     ax.set_aspect("equal")
     ax.set_axis_off()
@@ -246,14 +274,47 @@ def main() -> int:
         ax.text(tx, ty, f"{b} {L:05.1f}\u00b0", color=COLOUR[b], fontsize=12.0,
                 ha="center", va="center", zorder=9)
 
+    # comparison: hollow ring where each body stood at the second instant, joined
+    # to its position now by a dashed arc - the displacement is the whole point
+    disp: dict[str, float] = {}
+    mean_disp = 0.0
+    moved = 0
+    if comparing:
+        for b in order:
+            L2 = lon2[b]
+            gx, gy = polar(L2, R_MARK)
+            ax.scatter([gx], [gy], s=74, facecolor="none", edgecolor=COLOUR[b],
+                       linewidths=1.2, alpha=0.8, zorder=7)
+            ax.text(gx, gy, GLYPH[b], color=COLOUR[b], fontsize=8.5, ha="center",
+                    va="center", alpha=0.7, zorder=8)
+            span = ((lon[b] - L2 + 180.0) % 360.0) - 180.0
+            seg = arc(L2, L2 + span, R_MARK)
+            ax.plot([p[0] for p in seg], [p[1] for p in seg], color=COLOUR[b],
+                    lw=1.1, alpha=0.6, dashes=(2.2, 2.2), zorder=5)
+        disp = {b: ((lon[b] - lon2[b] + 180.0) % 360.0) - 180.0 for b in order}
+        mean_disp = float(np.mean([abs(v) for v in disp.values()]))
+        moved = sum(1 for b in order if bs.sector_name(lon[b]) != bs.sector_name(lon2[b]))
+
     # the instant, inside the wheel
     stamp, cal, _ = label_for(jd)
-    ax.text(0.0, 0.085, stamp, color=INK, fontsize=25, family="DejaVu Serif",
-            ha="center", va="center", zorder=6)
-    ax.text(0.0, 0.010, f"{cal} calendar", color=DIM, fontsize=10.5, ha="center",
-            va="center", zorder=6)
-    ax.text(0.0, -0.052, f"Terrestrial Time \u00b7 \u0394T {delta_t:.0f} s", color="#8d949c",
-            fontsize=10.5, ha="center", va="center", zorder=6)
+    if comparing:
+        stamp2, cal2, _ = label_for(cmp_jd)
+        ax.text(0.0, 0.145, stamp, color=INK, fontsize=23, family="DejaVu Serif",
+                ha="center", va="center", zorder=6)
+        ax.text(0.0, 0.062, "compared with", color=DIM, fontsize=9.5, ha="center",
+                va="center", zorder=6)
+        ax.text(0.0, 0.008, stamp2, color=INK, fontsize=16, family="DejaVu Serif",
+                ha="center", va="center", zorder=6)
+        ax.text(0.0, -0.056, f"{cal} and {cal2} calendars \u00b7 \u0394T "
+                              f"{delta_t:.0f} s / {float(eph2.ts.tt_jd(cmp_jd).delta_t):.0f} s",
+                color="#8d949c", fontsize=9.5, ha="center", va="center", zorder=6)
+    else:
+        ax.text(0.0, 0.085, stamp, color=INK, fontsize=25, family="DejaVu Serif",
+                ha="center", va="center", zorder=6)
+        ax.text(0.0, 0.010, f"{cal} calendar", color=DIM, fontsize=10.5, ha="center",
+                va="center", zorder=6)
+        ax.text(0.0, -0.052, f"Terrestrial Time \u00b7 \u0394T {delta_t:.0f} s",
+                color="#8d949c", fontsize=10.5, ha="center", va="center", zorder=6)
     ax.plot(*zip(*arc(0.0, 360.0, 0.535)), color="#252a31", lw=0.6, zorder=2)
 
     # ---- headings ---------------------------------------------------------
@@ -268,16 +329,23 @@ def main() -> int:
              + ("real IAU constellation boundaries" if args.table == "iau_j2000"
                 else f"HOROS boundary table ({args.table})"),
              color=DIM, fontsize=9.0, va="top")
+    if comparing:
+        days = jd - cmp_jd
     fig.text(0.012, 0.030,
              f"JPL {Path(eph.filename).name} \u00b7 {bs.name} boundaries "
              f"{bs.digest()} \u00b7 JD(TT) {jd:.5f}",
              color="#7b838c", fontsize=8.6, family="DejaVu Sans Mono", va="bottom")
 
     # ---- readout column ---------------------------------------------------
-    x0 = 0.700
+    x0 = 0.640 if comparing else 0.700
+    c_pos, c_con = x0, x0 + (0.078 if comparing else 0.098)
+    c_ear, c_del = x0 + 0.170, x0 + 0.280
     fig.text(x0, 0.972, "position", color=DIM, fontsize=9.0, va="top")
-    fig.text(x0 + 0.098, 0.972, "constellation", color=DIM, fontsize=9.0, va="top")
-    if spec:
+    fig.text(c_con, 0.972, "constellation", color=DIM, fontsize=9.0, va="top")
+    if comparing:
+        fig.text(c_ear, 0.972, f"at {stamp2}", color=DIM, fontsize=9.0, va="top")
+        fig.text(c_del, 0.972, "shift", color=DIM, fontsize=9.0, va="top")
+    elif spec:
         fig.text(x0 + 0.196, 0.972, "required", color=DIM, fontsize=9.0, va="top")
         fig.text(x0 + 0.196, 0.949, "\u2713 satisfied   \u2717 violated", color=FAINT,
                  fontsize=7.8, va="top")
@@ -286,12 +354,21 @@ def main() -> int:
         sect = bs.sector_name(lon[b])
         fig.text(x0 - 0.014, y + 0.004, GLYPH[b], color=COLOUR[b], fontsize=13, va="top")
         fig.text(x0 + 0.014, y, b, color=INK, fontsize=11.5, va="top")
-        fig.text(x0, y - 0.030, f"{lon[b]:07.2f}\u00b0", color=TEXT, fontsize=11.0,
+        fig.text(c_pos, y - 0.030, f"{lon[b]:07.2f}\u00b0", color=TEXT, fontsize=11.0,
                  family="DejaVu Sans Mono", va="top")
-        fig.text(x0 + 0.098, y - 0.030, f"{lat[b]:+05.2f}\u00b0", color=DIM,
+        fig.text(c_con, y - 0.030, f"{lat[b]:+05.2f}\u00b0", color=DIM,
                  fontsize=9.0, family="DejaVu Sans Mono", va="top")
-        fig.text(x0 + 0.140, y, sect, color=INK, fontsize=11.0, va="top")
-        if spec and b in spec.rules:
+        fig.text(c_con, y, sect, color=INK, fontsize=11.0, va="top")
+        if comparing:
+            s2 = bs.sector_name(lon2[b])
+            fig.text(c_ear, y, f"{lon2[b]:05.1f}\u00b0", color=TEXT, fontsize=10.0,
+                     family="DejaVu Sans Mono", va="top")
+            fig.text(c_ear, y - 0.026, s2, color=INK if s2 == sect else DIM,
+                     fontsize=9.6, va="top")
+            fig.text(c_del, y, f"{disp[b]:+06.1f}\u00b0",
+                     color=BAD if abs(disp[b]) > 60 else (ACCENT if abs(disp[b]) > 15 else TEXT),
+                     fontsize=10.0, family="DejaVu Sans Mono", va="top")
+        elif spec and b in spec.rules:
             hits = [nm for (nm, a, bb) in secs
                     if bool(spec.rules[b].contains(np.array([((a + bb) / 2.0) % 360.0]))[0])]
             ok = bool(spec.rules[b].contains(np.array([lon[b]]))[0])
@@ -302,9 +379,22 @@ def main() -> int:
                          fontsize=9.6, va="top")
         y -= 0.080
 
-    if spec:
+    if spec and not comparing:
         fig.text(x0, y + 0.014, f"specification: {Path(args.spec).name}", color=FAINT,
                  fontsize=8.4, family="DejaVu Sans Mono", va="top")
+    if comparing:
+        # the answer to "does it look the same" belongs beside the numbers it comes
+        # from, and below the table so it cannot land on the wheel
+        fig.text(x0, y - 0.006, f"\u25cf {stamp}      \u25cb {stamp2}", color=TEXT,
+                 fontsize=10.5, va="top")
+        fig.text(x0, y - 0.036, f"{days:,.0f} days apart \u00b7 one 1,151-year cycle",
+                 color=DIM, fontsize=9.6, va="top")
+        fig.text(x0, y - 0.074, f"mean displacement {mean_disp:.1f}\u00b0",
+                 color=ACCENT, fontsize=14, va="top")
+        fig.text(x0, y - 0.112, f"{moved} of {len(order)} bodies in a different "
+                                f"constellation", color=ACCENT, fontsize=10.5, va="top")
+        fig.text(x0, y - 0.146, "shift = longitude now minus then, in degrees",
+                 color=FAINT, fontsize=8.6, family="DejaVu Sans Mono", va="top")
 
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(args.out, facecolor=GROUND)
@@ -313,6 +403,13 @@ def main() -> int:
     print(f"  {stamp} ({cal} calendar, TT)")
     for b in order:
         print(f"  {b:<8} {lon[b]:7.3f}\u00b0  {lat[b]:+6.2f}\u00b0  {bs.sector_name(lon[b])}")
+    if comparing:
+        print(f"  compared with {stamp2} ({cal2} calendar, TT), {jd - cmp_jd:,.1f} days earlier")
+        for b in order:
+            print(f"    {b:<8} {lon[b]:7.2f}  ->  {lon2[b]:7.2f}   shift {disp[b]:+7.2f}\u00b0   "
+                  f"{bs.sector_name(lon[b])} / {bs.sector_name(lon2[b])}")
+        print(f"  mean |shift| {mean_disp:.2f}\u00b0  \u00b7  {moved} of {len(order)} bodies "
+              f"in a different constellation")
     return 0
 
 
