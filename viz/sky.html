@@ -76,12 +76,15 @@
   <p class="lede">Where the Sun, Moon and five planets stood, geocentrically, on
     the ecliptic of J2000 — computed from JPL&nbsp;DE441 under the real IAU
     constellation boundaries, so the sectors are the sizes they actually are.
-    Step the clock by an hour or a century; the trails show where everything has been.</p>
+    Step the clock by an hour or a century, or run it and watch the Moon lap the
+    circle — the trails show where everything has been.</p>
 
   <div class="bar">
     <div class="grp">
       <button id="back" title="step back">◀</button>
       <button id="play" title="run the clock">▶ run</button>
+      <select id="speedsel" title="how fast the clock runs"></select>
+      <span class="lbl" id="rate" aria-live="polite"></span>
       <button id="fwd" title="step forward">▶</button>
       <span class="lbl">by</span>
       <select id="stepsel"></select>
@@ -125,18 +128,28 @@ const STEPS=[["hour",1/24],["3 hours",3/24],["6 hours",6/24],["day",1],["week",7
              ["month",30.4375],["year",365.25],["10 years",3652.5],["century",36525]];
 const SPANS=[["off",0],["1 month",30.4375],["3 months",91.3],["1 year",365.25],
              ["12 years",4383],["120 years",43830]];
+/* How fast the clock runs, in days of sky per second of real time.  Separate
+   from the step control: the step is for nudging, this is for running, and at
+   a day per second nothing visibly moves - the Sun covers 1 degree. */
+const SPEEDS=[["1 day/s",1],["1 week/s",7],["1 month/s",30.4375],["1 year/s",365.25],
+              ["10 years/s",3652.5],["100 years/s",36525]];
 
-const state={jd:null,y:0,m:0,d:0,h:0,mi:0,stepIdx:3,spanIdx:0,lat:false,
-             table:"iau_j2000",playing:false,timer:null,busy:false};
+const state={jd:null,y:0,m:0,d:0,h:0,mi:0,stepIdx:3,spanIdx:1,speedIdx:1,lat:false,
+             table:"iau_j2000",playing:false,timer:null,busy:false,
+             lastT:0,acc:0,moved:0};
 
 /* ---- calendar arithmetic: Julian before 15 Oct 1582, Gregorian after ------ */
 const GREG=2299161.0;
 function jdFromCivil(y,m,d,h,mi){
   let yy=y, mm=m;
   if(mm<=2){yy-=1;mm+=12;}
+  /* Gregorian only from 15 October 1582; Julian before it.  This must be the
+     same switch civilFromJd uses, or a date round-trips to a different instant -
+     an earlier version tested a made-up pseudo-JD against a real one, so the
+     correction never applied and every step moved the clock 13 days. */
   let b=0;
-  const jdGuess=y*372+mm*31+d;
-  if(jdGuess>=GREG){                      // only where the Gregorian calendar applies
+  const gregorian = (y>1582) || (y===1582 && (m>10 || (m===10 && d>=15)));
+  if(gregorian){
     const a=Math.floor(yy/100); b=2-a+Math.floor(a/4);
   }
   return Math.floor(365.25*(yy+4716))+Math.floor(30.6001*(mm+1))+d+b-1524.5+(h+mi/60)/24;
@@ -190,9 +203,17 @@ async function load(){
     const sky=await fetchJSON(`${API}/sky?${query()}`);
     let track=null;
     const span=SPANS[state.spanIdx][1];
-    if(span>0){
+    /* While the clock runs, refresh the trails every third frame only: they are
+       the expensive call and a trail a few sky-days behind the markers is not
+       worth a request per frame. */
+    state.tick=(state.tick||0)+1;
+    const wantTrack = span>0 && (!state.playing || state.tick%3===1);
+    if(wantTrack){
       const n=Math.min(600,Math.max(120,Math.round(span)));
       track=await fetchJSON(`${API}/track?jd=${sky.jd_tt}&span_days=${span}&n=${n}&lat=${state.lat?1:0}`);
+      state.lastTrack=track;
+    } else if(state.lastTrack){
+      track=state.lastTrack;
     }
     render(sky,track);
   }catch(e){
@@ -317,17 +338,47 @@ function writeInputs(c){
   document.getElementById("hr").value=c.h;
   document.getElementById("mi").value=c.mi;
 }
-function nudge(days){
+function setRate(text){ const e=document.getElementById("rate"); if(e) e.textContent=text; }
+function fmtDays(d){
+  const a=Math.abs(d);
+  if(a<1/24) return Math.round(a*1440)+" min";
+  if(a<1.5)  return Math.round(a*24)+" hours";
+  if(a<60)   return Math.round(a)+" days";
+  if(a<800)  return (d/30.4375).toFixed(1)+" months";
+  if(a<8000) return (d/365.25).toFixed(1)+" years";
+  return Math.round(d/365.25)+" years";
+}
+function advance(days){
+  if(!days)return;
+  /* If a fetch is in flight, bank the sky-time rather than dropping it, so the
+     clock keeps the rate the viewer chose instead of stuttering. */
+  if(state.busy){ state.acc+=days; return; }
   readInputs();
   const jd=jdFromCivil(state.y,state.m,state.d,state.h,state.mi)+days;
   writeInputs(civilFromJd(jd));
+  state.moved+=days;
   load();
 }
+function nudge(days){ state.acc=0; state.moved=0; advance(days); setRate(""); }
 function setPlaying(on){
   state.playing=on;
   document.getElementById("play").textContent=on?"‖ pause":"▶ run";
   if(state.timer){clearInterval(state.timer);state.timer=null;}
-  if(on) state.timer=setInterval(()=>nudge(STEPS[state.stepIdx][1]),420);
+  if(on){
+    state.lastT=performance.now(); state.acc=0; state.moved=0;
+    setRate("running at "+SPEEDS[state.speedIdx][0]);
+    state.timer=setInterval(()=>{
+      const now=performance.now();
+      const dt=Math.max(0,(now-state.lastT)/1000);
+      state.lastT=now;
+      state.acc+=dt*SPEEDS[state.speedIdx][1];
+      if(state.acc<=0)return;
+      const move=state.acc; state.acc=0;
+      advance(move);
+    },160);
+  } else {
+    setRate(state.moved?("ran "+fmtDays(state.moved)+" of sky"):"");
+  }
 }
 function init(){
   const stepsel=document.getElementById("stepsel");
@@ -338,6 +389,14 @@ function init(){
   SPANS.forEach(([n,v],i)=>{const o=document.createElement("option");o.value=i;o.textContent=n;spansel.appendChild(o);});
   spansel.value=state.spanIdx;
   spansel.onchange=e=>{state.spanIdx=+e.target.value;load();};
+  const speedsel=document.getElementById("speedsel");
+  SPEEDS.forEach(([n,v],i)=>{const o=document.createElement("option");o.value=i;o.textContent=n;speedsel.appendChild(o);});
+  speedsel.value=state.speedIdx;
+  speedsel.onchange=e=>{
+    state.speedIdx=+e.target.value;
+    state.lastT=performance.now();
+    if(state.playing) setRate("running at "+SPEEDS[state.speedIdx][0]);
+  };
 
   document.getElementById("back").onclick=()=>nudge(-STEPS[state.stepIdx][1]);
   document.getElementById("fwd").onclick=()=>nudge(STEPS[state.stepIdx][1]);
