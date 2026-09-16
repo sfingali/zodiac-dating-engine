@@ -104,7 +104,13 @@ class Ephemeris:
         from skyfield.api import Loader
         filename = filename or default_ephemeris()
         ts = Loader(str(cache_dir())).timescale()
-        ts.julian_calendar_cutoff = -10**9   # always the Julian calendar, no silent switch
+        # Skyfield defaults to the Gregorian calendar for every date, including
+        # the ancient ones. A document of 1168 means the Julian calendar, and so
+        # does every published dating this engine is meant to be compared with,
+        # so the switch is set explicitly at the Gregorian reform: Julian before
+        # 15 October 1582, Gregorian after. This keeps ts.utc() parsing a date,
+        # engine._fmt_jd() printing one, and the catalogs agreeing.
+        ts.julian_calendar_cutoff = 2299161.0
         resolved = resolve_kernel(filename)
         loader = Loader(str(cache_dir()))
         if os.path.exists(resolved):
@@ -128,10 +134,15 @@ class Ephemeris:
             key = key.split()[0]
         return self.eph[key]
 
-    def longitudes(self, jd_tt: np.ndarray) -> dict:
-        """Geocentric apparent J2000 ecliptic longitude, degrees, per body.
+    def coordinates(self, jd_tt: np.ndarray) -> dict:
+        """Geocentric apparent J2000 ecliptic longitude and latitude, in degrees.
 
-        jd_tt: array of Julian dates on the TT scale.
+        Returns {body: (longitude_0_to_360, latitude_minus90_to_90)}.  Latitude is
+        kept because it is real: the seven bodies are not exactly on the ecliptic,
+        Saturn reaching about 2.5 degrees either side, and a depiction of the sky
+        that folded them onto the circle would be a drawing of a convention rather
+        than of the sky.  It plays no part in dating, where a longitude sector is
+        what the sources describe.
         """
         from skyfield.framelib import ecliptic_J2000_frame
         t = self.ts.tt_jd(np.asarray(jd_tt, dtype=float))
@@ -140,13 +151,26 @@ class Ephemeris:
         for name in BODIES:
             try:
                 astrometric = earth.at(t).observe(self._body(name))
-                _, lon, _ = astrometric.frame_latlon(ecliptic_J2000_frame)
-                out[name] = np.asarray(lon.degrees) % 360.0
+                # Skyfield's frame_latlon returns (latitude, longitude, distance)
+                lat, lon, _distance = astrometric.frame_latlon(ecliptic_J2000_frame)
+                out[name] = (np.asarray(lon.degrees) % 360.0,
+                             np.asarray(lat.degrees))
             except Exception as exc:                       # pragma: no cover
                 raise EphemerisRangeError(
                     f"{name} could not be computed for the requested instants "
                     f"with {self.filename}: {exc}") from exc
         return out
+
+    def longitudes(self, jd_tt: np.ndarray) -> dict:
+        """Geocentric apparent J2000 ecliptic longitude, degrees, per body.
+
+        jd_tt: array of Julian dates on the TT scale.
+        """
+        return {name: lon for name, (lon, _lat) in self.coordinates(jd_tt).items()}
+
+    def latitudes(self, jd_tt: np.ndarray) -> dict:
+        """Geocentric apparent J2000 ecliptic latitude, degrees, per body."""
+        return {name: lat for name, (_lon, lat) in self.coordinates(jd_tt).items()}
 
     def range_years(self):
         return self.eph.spk.segments[0].start_jd, self.eph.spk.segments[0].end_jd

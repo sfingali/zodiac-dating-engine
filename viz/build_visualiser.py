@@ -373,10 +373,9 @@ function arcSeg(lon0,lon1,r,cx,cy,steps){ // polyline, so no sweep-flag ambiguit
   return d;
 }
 function jdToYear(jd){return Math.round((jd-1721423.5)/365.25)+1;}
-function jdToDate(jd){ // Julian calendar, matching the engine's own output
-  let j=jd+0.5, z=Math.floor(j), f=j-z;
-  // engine uses the Meeus Julian branch; mirror it exactly
-  const alpha=Math.floor((z-1867216.25)/36524.25), a=z+1+alpha-Math.floor(alpha/4);
+function jdToDate(jd){ // the calendar that was in use: Julian before 15 Oct 1582
+  let j=jd+0.5, z=Math.floor(j), f=j-z, a=z;
+  if(z>=2299161){const al=Math.floor((z-1867216.25)/36524.25);a=z+1+al-Math.floor(al/4);}
   const b=a+1524, c=Math.floor((b-122.1)/365.25), dd=Math.floor(365.25*c);
   const e=Math.floor((b-dd)/30.6001);
   const day=b-dd-Math.floor(30.6001*e)+f;

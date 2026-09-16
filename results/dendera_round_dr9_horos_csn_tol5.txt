@@ -1,33 +1,3 @@
-  sampled 200000 instants, 0 matched
-  sampled 400000 instants, 0 matched
-  sampled 600000 instants, 0 matched
-  sampled 800000 instants, 0 matched
-  sampled 1000000 instants, 0 matched
-  sampled 1200000 instants, 0 matched
-  sampled 1400000 instants, 0 matched
-  sampled 1600000 instants, 0 matched
-  sampled 1800000 instants, 0 matched
-  sampled 2000000 instants, 0 matched
-  sampled 2200000 instants, 0 matched
-  sampled 2400000 instants, 0 matched
-  sampled 2600000 instants, 0 matched
-  sampled 2800000 instants, 0 matched
-  sampled 3000000 instants, 0 matched
-  sampled 3200000 instants, 0 matched
-  sampled 3400000 instants, 8 matched
-  sampled 3600000 instants, 8 matched
-  sampled 3800000 instants, 8 matched
-  sampled 4000000 instants, 8 matched
-  sampled 4200000 instants, 8 matched
-  sampled 4400000 instants, 8 matched
-  sampled 4600000 instants, 8 matched
-  sampled 4800000 instants, 8 matched
-  sampled 5000000 instants, 8 matched
-  sampled 5200000 instants, 8 matched
-  sampled 5400000 instants, 8 matched
-  sampled 5600000 instants, 8 matched
-  sampled 5800000 instants, 13 matched
-  sampled 5801601 instants, 13 matched
 ==============================================================================
 ZODIAC DATING ENGINE - results
 ==============================================================================
@@ -43,7 +13,7 @@ search            : JD 990000.0 to 2440400.0, step 6 h
   Mars     296.00 to 326.00 (width 30.00 deg)
   Jupiter  92.00 to 118.00 (width 26.00 deg)
   Saturn   172.00 to 215.00 (width 43.00 deg)
-order constraint  : Venus < Jupiter < Saturn < Moon < Mars < Mercury=Sun
+order constraint  : Venus < Jupiter < Saturn < Moon < Mars < Mercury=Sun   [reported only, not enforced - set enforce_order to match on it]
 note              : The same drawing and the same published decipherment (round Dendera zodiac, variant DR9, Fomenko & Nosovsky, New Chronology of Egypt, Appendix 2) run under the boundary table distributed with their own program HOROS, current table CSN (in use from 17.11.2007), instead of the real IAU boundaries. Comparing this run with dendera_round_dr9_iau.json isolates the effect of the boundary table on the dates returned: the tables differ by up to 5 degrees at a sector edge and the HOROS tables merge Ophiuchus into Scorpio and Sagittarius.
 ------------------------------------------------------------------------------
 instants sampled  : 5801601
@@ -54,8 +24,8 @@ windows found     : 2
   1   1820086.61275   1820088.67033    2.0576       nan  ok
   2   2391710.18145   2391711.47594    1.2945       nan  VIOLATED
 ------------------------------------------------------------------------------
-[1] +0271-02-17 02:42:21 (Julian calendar, TT)
-    to +0271-02-19 04:05:16 (Julian calendar, TT)
+[1] +0271-02-16 02:42:21 (Julian calendar, TT)
+    to +0271-02-18 04:05:16 (Julian calendar, TT)
     duration 49.382 hours (2.0576 days)
     geocentric apparent J2000 ecliptic longitudes at midpoint:
       Sun       352.252 deg  (Pisces)
@@ -67,8 +37,8 @@ windows found     : 2
       Saturn    169.018 deg  (Leo)
     cyclic order found: Venus < Jupiter < Saturn < Moon < Mars < Mercury < Sun
     order requirement : satisfied
-[2] +1836-03-06 16:21:17 (Julian calendar, TT)
-    to +1836-03-07 23:25:20 (Julian calendar, TT)
+[2] +1836-03-06 16:21:17 (Gregorian calendar, TT)
+    to +1836-03-07 23:25:20 (Gregorian calendar, TT)
     duration 31.068 hours (1.2945 days)
     geocentric apparent J2000 ecliptic longitudes at midpoint:
       Sun       349.113 deg  (Pisces)

@@ -47,14 +47,25 @@ class Window:
         return self.end_jd_tt - self.start_jd_tt
 
 
-def _jd_to_julian_calendar(jd):
-    """Julian-calendar date-time string for a JD on the TT scale."""
-    # Meeus, Astronomical Algorithms, ch. 7 (Julian calendar branch)
+def _jd_to_calendar(jd):
+    """Calendar date-time for a JD on the TT scale, in the calendar that was in
+    use: Julian before 15 October 1582, Gregorian from that day onward.
+
+    Meeus, Astronomical Algorithms, ch. 7, with the switch at JD 2299161. That is
+    the same rule Skyfield applies when it parses a calendar date, so a date this
+    function prints can be read back in and lands on the same instant - an earlier
+    version applied the Gregorian correction to every date while labelling the
+    result Julian, which shifted twelfth-century dates by seven days and made
+    printing and parsing disagree for anything after 1582.
+    """
     jd = float(jd) + 0.5
     z = int(jd)
     f = jd - z
-    alpha = int((z - 1867216.25) / 36524.25)
-    a = z + 1 + alpha - alpha // 4
+    if z >= 2299161:                        # Gregorian
+        alpha = int((z - 1867216.25) / 36524.25)
+        a = z + 1 + alpha - alpha // 4
+    else:                                   # Julian
+        a = z
     b = a + 1524
     c = int((b - 122.1) / 365.25)
     d = int(365.25 * c)
@@ -71,9 +82,13 @@ def _jd_to_julian_calendar(jd):
     return year, month, di, hh, mm, ss
 
 
+def _calendar_name(jd):
+    return "Gregorian calendar" if float(jd) + 0.5 >= 2299161 else "Julian calendar"
+
+
 def _fmt_jd(jd):
-    y, m, d, hh, mm, ss = _jd_to_julian_calendar(jd)
-    return f"{y:+05d}-{m:02d}-{d:02d} {hh:02d}:{mm:02d}:{ss:02d} (Julian calendar, TT)"
+    y, m, d, hh, mm, ss = _jd_to_calendar(jd)
+    return f"{y:+05d}-{m:02d}-{d:02d} {hh:02d}:{mm:02d}:{ss:02d} ({_calendar_name(jd)}, TT)"
 
 
 def _cyclic_order_match(found_order, required):

@@ -201,41 +201,43 @@ No tolerance is applied unless a run says so.
 
 | Specification | Boundary set | Tolerance | Windows found |
 |---|---|---|---|
-| Long Dendera DL2 | real IAU | 0° | **1**: 29 Apr – 1 May 1168, 45.5 h |
+| Long Dendera DL2 | real IAU | 0° | **1**: 22–24 Apr 1168, 45.5 h, order satisfied |
 | Round Dendera DR9 | real IAU | 0° | **0** |
 | Round Dendera DR9 | HOROS CSN | 0° | **0** |
-| Round Dendera DR9 | real IAU | 5° | **2**: 17–19 Feb −169, 6–9 Mar 1836 |
-| Round Dendera DR9 | HOROS CSN | 5° | **2**: 17–19 Feb 271, 6–7 Mar 1836 |
+| Round Dendera DR9 | real IAU | 5° | **2**: 19–21 Feb −169, 6–9 Mar 1836 — both violate the order |
+| Round Dendera DR9 | HOROS CSN | 5° | **2**: 16–18 Feb 271 (order satisfied), 6–7 Mar 1836 (violated) |
+
+Dates are printed in the calendar that was in use: Julian before 15 October 1582,
+Gregorian from that day on (see *Time conventions*).
 
 Three things are worth reading out of that table.
 
-**The long zodiac reproduces.** Under real boundaries, with nothing widened, the
-DL2 decipherment admits exactly one window in thirteen thousand years: 29 April
-to 1 May 1168. Fomenko and Nosovsky publish the long zodiac's exhaustive
-solution as 22–26 April 1168. Same year, same event, reached by a different
-implementation. The seven-day offset between the two windows is left as it
-stands rather than tuned away — every number that produced each window is
-printed, so it is a question that can be answered rather than a discrepancy to
-be taken on trust.
+**The long zodiac reproduces, and it is not a near miss.** Under real boundaries,
+with nothing widened, the DL2 decipherment admits exactly one window in thirteen
+thousand years: 22–24 April 1168 (Julian). Fomenko and Nosovsky publish the long
+zodiac's exhaustive solution as 22–26 April 1168. The window this engine finds sits
+*inside* theirs, from a different implementation, a different ephemeris and
+independently derived boundary tables.
 
 **The round zodiac's DR9 variant produces nothing at all on an exact reading**,
 under the real boundaries or under HOROS's own current table — so the variant as
-published is not merely rare, it never happens. It only yields dates when
-HOROS's documented preliminary tolerance of ±5° is applied, at which point two
-appear.
+published is not merely rare, it never happens. It only yields dates when HOROS's
+documented preliminary tolerance of ±5° is applied, at which point two appear, and
+then the published *order* of the bodies eliminates one of them under their own
+table and both of them under the real boundaries.
 
 **The boundary table moves ancient dates by centuries.** With ±5° allowed, the
 same drawing and the same published variant date to −169 or to 271 depending
 solely on whether the real IAU boundaries or the HOROS table is used; the
-eighteenth-century window is unaffected. That is the size of the effect the
-choice of boundary table has on a dating, and it is why this engine prints which
-one it used, with its hash.
+nineteenth-century window is unaffected. That is the size of the effect the choice
+of boundary table has on a dating, and it is why this engine prints which one it
+used, with its hash.
 
 
 ## Visualiser
 
-`viz/build_visualiser.py` writes a single self-contained page — no build step, no
-CDN, no server-side compute at request time — showing the wheels, the constraint
+`viz/build_visualiser.py` writes a self-contained page — no build step, no CDN,
+no server-side compute at request time — showing the wheels, the constraint
 bands, the real (uneven) constellation sectors including Ophiuchus, a scrubber
 over each window, and a timeline of every window found in the 13,000-year span.
 It reads the reports in `results/` and recomputes the match state with the
@@ -245,7 +247,62 @@ engine's own rule objects, so the page cannot disagree with the reports.
 python viz/build_visualiser.py --out index.html      # needs the kernel, as usual
 ```
 
+## Sky view, and the positions API
+
+`viz/sky.html` is a depiction of the sky rather than of any decipherment: the
+seven bodies at their true geocentric positions, a date and time you can step by
+an hour or a century, trails showing where each body has been, and the real
+constellations. It runs from a small FastAPI service in `serve/app.py`:
+
+```
+GET /api/health
+GET /api/range
+GET /api/sky?year=&month=&day=&hour=&minute=      # or ?jd=<TT Julian date>
+GET /api/track?jd=&span_days=&n=                  # for the trails
+```
+
+The API exists because Skyfield is Python and the kernel is 1.5 GB — a browser
+cannot compute this, and precomputing a grid would fix the step and the range.
+The service loads the ephemeris once at startup and answers in milliseconds
+after that. It is supervised by s6 (`/opt/data/services/zodiac/run`, watchdog in
+`/opt/data/scripts/`, boot install in `/opt/data/s6-install-zodiac.sh`) and
+reached through Caddy at `/zodiac/api/*`.
+
 A copy runs at <https://stephenfingleton.com/zodiac/>.
+
+## Time conventions
+
+The engine is strict about calendar and time scale, and this is the part most
+easily got wrong:
+
+* A date you type is read in the calendar that was in use: **Julian before
+  15 October 1582, Gregorian from that day on** (Skyfield's switch is set
+  explicitly to 2299161.0, because Skyfield's default is proleptic Gregorian,
+  which would put a twelfth-century date seven days out).
+* Positions are functions of **Terrestrial Time**, so a civil date is converted
+  with Skyfield's ΔT model, and ΔT is printed with the result — 25,310 s in
+  1000 BC, 1,002 s in 1168, about 69 s today.
+* The same switch applies when parsing and when printing, so a date the engine
+  prints can be typed back in and land on the same instant. `tools/delta_t.py`
+  shows the model across the covered span.
+
+## Corrections made while building this
+
+Kept here because both changed published numbers, and a reader comparing an
+earlier version deserves to know why they moved.
+
+1. **Dates were being printed in the wrong calendar.** The conversion carried the
+   Gregorian correction term for every date while labelling the result Julian, and
+   Skyfield's own switch was being set to the opposite of what was intended
+   (its default is proleptic Gregorian, not Julian-before-1582). Twelfth-century
+   windows therefore appeared seven days late: the long zodiac's unambiguous
+   window moved from "29 April – 1 May 1168" to **22–24 April 1168**, which is
+   inside the 22–26 April that Fomenko and Nosovsky publish. What had looked like
+   a seven-day disagreement with the published result was this bug.
+2. **The order constraint was reported but never matched on.** It is now explicit
+   (`enforce_order`, `--enforce-order`, off by default). Turning it on removes one
+   of the two round-zodiac candidates under HOROS's own table and both of them
+   under the real boundaries.
 
 ## Files
 
@@ -264,6 +321,9 @@ tools/
   delta_t.py              print the Delta T model in use
 viz/
   build_visualiser.py     generate the self-contained visualiser page
+  sky.html                the sky view (served at /zodiac/ alongside the API)
+serve/
+  app.py                  positions API behind the sky view
 ```
 
 ## Licence and attribution

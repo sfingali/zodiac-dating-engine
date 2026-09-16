@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The sky, at any date — positions of the seven classical bodies</title>
+<meta name="description" content="Geocentric positions of the Sun, Moon and five planets at any date and time, computed from JPL DE441 under the real IAU constellation boundaries.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%23c9c4b8' stroke-width='1'/%3E%3Ccircle cx='16' cy='16' r='3.5' fill='%23c9c4b8'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#08090a; --ink:#e9e6df; --dim:#8d887e; --faint:#4a4842;
+    --line:rgba(233,230,223,.14); --line2:rgba(233,230,223,.07);
+    --mono:ui-monospace,"JetBrains Mono","SF Mono",Menlo,Consolas,monospace;
+    --c-sun:#e8d9a0; --c-moon:#cfd3d8; --c-mercury:#b9c6cf; --c-venus:#e3c3b4;
+    --c-mars:#c98f6a; --c-jupiter:#cbb98a; --c-saturn:#a9a48f;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink)}
+  body{font-family:var(--mono);font-size:13px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  main{max-width:1160px;margin:0 auto;padding:7vh 5vw 14vh}
+  h1{font-weight:400;font-size:clamp(24px,3.6vw,44px);line-height:1.12;margin:0 0 .5em;letter-spacing:-.01em}
+  .lede{max-width:64ch;color:var(--dim);font-size:14px;margin:0 0 2.2em}
+  a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
+  a:hover{border-color:var(--ink)}
+  .bar{display:flex;flex-wrap:wrap;gap:1.6em 2.2em;align-items:flex-end;
+       border-top:1px solid var(--line2);border-bottom:1px solid var(--line2);padding:1.1em 0;margin-bottom:2.4em}
+  .grp{display:flex;gap:.7em;align-items:center}
+  .grp .lbl{color:var(--faint);font-size:10px;letter-spacing:.2em;text-transform:uppercase}
+  button,input,select{font:inherit;color:var(--ink);background:none;border:0}
+  button{cursor:pointer;padding:.1em .35em;color:var(--dim)}
+  button:hover{color:var(--ink)}
+  button.pri{color:var(--ink)}
+  select{border-bottom:1px solid var(--line);padding:.1em .1em;color:var(--ink)}
+  select:focus,input:focus{outline:none;border-color:var(--ink)}
+  input[type=number],input[type=text]{width:5.2em;border-bottom:1px solid var(--line);
+    padding:.1em .1em;text-align:right;font-variant-numeric:tabular-nums}
+  #yr{width:6.4em}
+  .step{min-width:2.4em;text-align:center}
+  .stage{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:4vw;align-items:start}
+  @media(max-width:940px){.stage{grid-template-columns:1fr;gap:6vh}}
+  svg{width:100%;height:auto;display:block;overflow:visible}
+  .ring{fill:none;stroke:var(--line2)}
+  .sec{fill:none;stroke:var(--line)}
+  .bnd{stroke:var(--faint);stroke-width:1}
+  .tick{stroke:var(--line2);stroke-width:.6}
+  .tick.major{stroke:var(--faint)}
+  .tlabel{fill:var(--faint);font-size:9px;font-family:var(--mono)}
+  .sname{fill:var(--dim);font-size:9px;font-family:var(--mono);letter-spacing:.08em}
+  .swidth{fill:var(--faint);font-size:8px;font-family:var(--mono)}
+  .trail{fill:none;stroke-width:1;stroke-opacity:.5}
+  .marker circle{stroke:none}
+  .marker text{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em}
+  .gl{font-size:15px}
+  .ctr{fill:var(--dim);font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase}
+  .ctr.big{fill:var(--ink);font-size:15px;letter-spacing:.04em;text-transform:none}
+  .read{color:var(--dim)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  td,th{padding:.4em 0;border-bottom:1px solid var(--line2);white-space:nowrap;text-align:left}
+  th{color:var(--faint);font-weight:400;font-size:10px;letter-spacing:.16em;text-transform:uppercase}
+  td.n{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+  td.d{text-align:right;font-variant-numeric:tabular-nums}
+  .note{color:var(--faint);font-size:11px;margin-top:1.6em;line-height:1.7}
+  .err{color:var(--c-mars);font-size:12px;min-height:1.4em}
+  .method{margin-top:12vh;border-top:1px solid var(--line2);padding-top:4vh;columns:2;column-gap:5vw}
+  @media(max-width:940px){.method{columns:1}}
+  .method div{break-inside:avoid;margin-bottom:2em}
+  .method h3{font-weight:400;font-size:12px;margin:0 0 .4em;color:var(--ink)}
+  .method p{margin:0;color:var(--dim)}
+  .foot{margin-top:8vh;border-top:1px solid var(--line2);padding-top:3vh;color:var(--faint);font-size:11px}
+  code{font-family:var(--mono);color:var(--ink)}
+</style>
+</head>
+<body>
+<main>
+  <h1>The sky, at any date</h1>
+  <p class="lede">Where the Sun, Moon and five planets stood, geocentrically, on
+    the ecliptic of J2000 — computed from JPL&nbsp;DE441 under the real IAU
+    constellation boundaries, so the sectors are the sizes they actually are.
+    Step the clock by an hour or a century; the trails show where everything has been.</p>
+
+  <div class="bar">
+    <div class="grp">
+      <button id="back" title="step back">◀</button>
+      <button id="play" title="run the clock">▶ run</button>
+      <button id="fwd" title="step forward">▶</button>
+      <span class="lbl">by</span>
+      <select id="stepsel"></select>
+    </div>
+    <div class="grp">
+      <span class="lbl">date</span>
+      <input id="yr" type="number" step="1" title="year (Julian calendar before 1582)">
+      <input id="mo" type="number" min="1" max="12" step="1" title="month">
+      <input id="dy" type="number" min="1" max="31" step="1" title="day">
+      <input id="hr" type="number" min="0" max="23" step="1" title="hour (UT)">
+      <input id="mi" type="number" min="0" max="59" step="1" title="minute">
+      <button id="now" class="pri">today</button>
+    </div>
+    <div class="grp">
+      <span class="lbl">trails</span>
+      <select id="spansel"></select>
+    </div>
+    <div class="grp">
+      <span class="lbl">latitude</span>
+      <button id="lattog" aria-pressed="false">off the ecliptic</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="wheel"><div class="err" id="err"></div></div>
+    <div class="read" id="read"></div>
+  </div>
+
+  <section class="method" id="method"></section>
+  <div class="foot" id="foot"></div>
+</main>
+
+<script>
+const API="./api";
+const BODIES=["Sun","Moon","Mercury","Venus","Mars","Jupiter","Saturn"];
+const GLYPH={Sun:"☉",Moon:"☽",Mercury:"☿",Venus:"♀",Mars:"♂",Jupiter:"♃",Saturn:"♄"};
+const COLOUR={Sun:"var(--c-sun)",Moon:"var(--c-moon)",Mercury:"var(--c-mercury)",
+              Venus:"var(--c-venus)",Mars:"var(--c-mars)",Jupiter:"var(--c-jupiter)",
+              Saturn:"var(--c-saturn)"};
+const STEPS=[["hour",1/24],["3 hours",3/24],["6 hours",6/24],["day",1],["week",7],
+             ["month",30.4375],["year",365.25],["10 years",3652.5],["century",36525]];
+const SPANS=[["off",0],["1 month",30.4375],["3 months",91.3],["1 year",365.25],
+             ["12 years",4383],["120 years",43830]];
+
+const state={jd:null,y:0,m:0,d:0,h:0,mi:0,stepIdx:3,spanIdx:0,lat:false,
+             table:"iau_j2000",playing:false,timer:null,busy:false};
+
+/* ---- calendar arithmetic: Julian before 15 Oct 1582, Gregorian after ------ */
+const GREG=2299161.0;
+function jdFromCivil(y,m,d,h,mi){
+  let yy=y, mm=m;
+  if(mm<=2){yy-=1;mm+=12;}
+  let b=0;
+  const jdGuess=y*372+mm*31+d;
+  if(jdGuess>=GREG){                      // only where the Gregorian calendar applies
+    const a=Math.floor(yy/100); b=2-a+Math.floor(a/4);
+  }
+  return Math.floor(365.25*(yy+4716))+Math.floor(30.6001*(mm+1))+d+b-1524.5+(h+mi/60)/24;
+}
+function civilFromJd(jd){
+  let j=jd+0.5, z=Math.floor(j), f=j-z, a=z;
+  if(j>=GREG){const al=Math.floor((z-1867216.25)/36524.25);a=z+1+al-Math.floor(al/4);}
+  const b=a+1524, c=Math.floor((b-122.1)/365.25), dd=Math.floor(365.25*c),
+        e=Math.floor((b-dd)/30.6001);
+  const day=b-dd-Math.floor(30.6001*e)+f;
+  let month=e<14?e-1:e-13, year=month>2?c-4716:c-4715;
+  const di=Math.floor(day), fr=day-di, hh=fr*24, h=Math.floor(hh);
+  let mi=Math.round((hh-h)*60);
+  if(mi===60){mi=0; return civilFromJd(jd+1/1440);}
+  return {y:year,m:month,d:di,h,mi};
+}
+const pad=(n,w=2)=>String(Math.abs(n)).padStart(w,"0");
+function dateLabel(c){return (c.y<0?"-":"+")+pad(c.y,4)+"-"+pad(c.m)+"-"+pad(c.d)+" "+pad(c.h)+":"+pad(c.mi);}
+
+/* ---- wheel geometry ------------------------------------------------------- */
+const CX=345,CY=345,R=232;
+function pt(lon,r){const a=(180+lon)*Math.PI/180;return [CX+r*Math.cos(a),CY-r*Math.sin(a)];}
+function arcPath(lon0,lon1,r){
+  const span=((lon1-lon0)%360+360)%360, n=Math.max(2,Math.ceil(span/0.75));
+  let d="";
+  for(let i=0;i<=n;i++){const [x,y]=pt(lon0+span*i/n,r);d+=(i?"L":"M")+x.toFixed(2)+" "+y.toFixed(2)+" ";}
+  return d;
+}
+function sectorOf(crossings,lon){
+  for(let i=0;i<crossings.length;i++){
+    const start=crossings[i].lon, end=crossings[(i+1)%crossings.length].lon;
+    if(((lon-start)%360+360)%360 < ((end-start)%360+360)%360 || ((end-start)%360+360)%360===0)
+      return crossings[i].name;
+  }
+  return crossings[crossings.length-1].name;
+}
+
+/* ---- fetch ---------------------------------------------------------------- */
+async function fetchJSON(u){
+  const r=await fetch(u);
+  if(!r.ok){const t=await r.text(); throw new Error(t.slice(0,220));}
+  return r.json();
+}
+function query(){
+  return `year=${state.y}&month=${state.m}&day=${state.d}&hour=${state.h}&minute=${state.mi}&lat=${state.lat?1:0}`;
+}
+async function load(){
+  if(state.busy)return; state.busy=true;
+  try{
+    document.getElementById("err").textContent="";
+    const sky=await fetchJSON(`${API}/sky?${query()}`);
+    let track=null;
+    const span=SPANS[state.spanIdx][1];
+    if(span>0){
+      const n=Math.min(600,Math.max(120,Math.round(span)));
+      track=await fetchJSON(`${API}/track?jd=${sky.jd_tt}&span_days=${span}&n=${n}&lat=${state.lat?1:0}`);
+    }
+    render(sky,track);
+  }catch(e){
+    document.getElementById("err").textContent="positions unavailable — "+e.message;
+  }finally{state.busy=false;}
+}
+
+/* ---- render --------------------------------------------------------------- */
+function render(sky,track){
+  const bs=sky.boundaries, W=690, H=690;
+  let h="";
+  // degree ring: every 10 degrees, labelled every 30
+  h+=`<path class="ring" d="${arcPath(0,360,R+58)}"/>`;
+  for(let d=0;d<360;d+=10){
+    const major=(d%30===0);
+    const [x0,y0]=pt(d,R+58), [x1,y1]=pt(d,R+58-(major?9:5));
+    h+=`<line class="tick ${major?"major":""}" x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}"/>`;
+    if(major){
+      const [lx,ly]=pt(d,R+72);
+      h+=`<text class="tlabel" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle">${d}°</text>`;
+    }
+  }
+  // constellation sectors, at their true widths
+  for(let i=0;i<bs.length;i++){
+    const start=bs[i].lon, end=bs[(i+1)%bs.length].lon;
+    const span=((end-start)%360+360)%360;
+    h+=`<path class="sec" d="${arcPath(start,end,R)}"/>`;
+    h+=`<path class="ring" d="${arcPath(start,end,R-14)}"/>`;
+    const [bx0,by0]=pt(start,R-14), [bx1,by1]=pt(start,R);
+    h+=`<line class="bnd" x1="${bx0.toFixed(1)}" y1="${by0.toFixed(1)}" x2="${bx1.toFixed(1)}" y2="${by1.toFixed(1)}"/>`;
+    const mid=start+span/2;
+    const [ax,ay]=pt(mid,R-2), [lx,ly]=pt(mid,R+26);
+    h+=`<line class="tick" x1="${ax.toFixed(1)}" y1="${ay.toFixed(1)}" x2="${lx.toFixed(1)}" y2="${ly.toFixed(1)}"/>`;
+    h+=`<text class="sname" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle">${bs[i].name.toUpperCase()}</text>`;
+    h+=`<text class="swidth" x="${lx.toFixed(1)}" y="${(ly+10).toFixed(1)}" text-anchor="middle">${span.toFixed(1)}°</text>`;
+  }
+  // trails
+  if(track){
+    BODIES.forEach((b,bi)=>{
+      const arr=track.bodies[b]; if(!arr)return;
+      const r=R-30-bi*3.2;
+      let seg=[];
+      for(let i=0;i<arr.length;i++){
+        const lon=arr[i];
+        if(seg.length&&Math.abs(lon-seg[seg.length-1].raw)>180){    // wrapped: break the line
+          paint(seg);
+          seg=[];
+        }
+        const [x,y]=pt(lon,r);
+        seg.push({raw:lon,xy:[x,y]});
+      }
+      paint(seg);
+      function paint(s){
+        if(s.length<2)return;
+        const d=s.map((p,i)=>(i?"L":"M")+p.xy[0].toFixed(1)+" "+p.xy[1].toFixed(1)).join(" ");
+        h+=`<path class="trail" d="${d}" stroke="${COLOUR[b]}"/>`;
+      }
+    });
+  }
+  // markers, staggered in radius so labels do not collide
+  const used=[];
+  BODIES.forEach((b,bi)=>{
+    const info=sky.bodies[b];
+    const lon=info.lon;
+    let r=R-30-bi*3.2;
+    if(state.lat) r-= Math.max(-40,Math.min(40, info.lat*14));
+    const [mx,my]=pt(lon,r);
+    used.push({lon,r});
+    h+=`<g class="marker">`;
+    h+=`<circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="3.4" fill="${COLOUR[b]}"/>`;
+    const [gx,gy]=pt(lon,r+16);
+    h+=`<text class="gl" x="${gx.toFixed(1)}" y="${gy.toFixed(1)}" text-anchor="middle" fill="${COLOUR[b]}">${GLYPH[b]}</text>`;
+    const [nx,ny]=pt(lon,r+30);
+    h+=`<text x="${nx.toFixed(1)}" y="${ny.toFixed(1)}" text-anchor="middle" fill="${COLOUR[b]}">${b.toUpperCase()}</text>`;
+    h+=`</g>`;
+  });
+  // centre
+  h+=`<text class="ctr big" x="${CX}" y="${CY-4}" text-anchor="middle">${dateLabel(civilFromJd(sky.jd_ut1))}</text>`;
+  h+=`<text class="ctr" x="${CX}" y="${CY+16}" text-anchor="middle">civil date · UT</text>`;
+
+  const host=document.querySelector(".wheel");
+  let svg=host.querySelector("svg");
+  if(!svg){svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+    svg.setAttribute("viewBox",`0 0 ${W} ${H}`); host.appendChild(svg);}
+  svg.innerHTML=h;
+
+  // readout
+  let rows="";
+  BODIES.forEach(b=>{
+    const v=sky.bodies[b];
+    rows+=`<tr><td style="color:${COLOUR[b]}">${GLYPH[b]} ${b}</td>`+
+          `<td class="n">${v.lon.toFixed(3)}°</td>`+
+          `<td class="d">${v.sector}</td>`+
+          `<td class="d">${state.lat&&v.lat!=null?v.lat.toFixed(2)+"°":"—"}</td></tr>`;
+  });
+  document.getElementById("read").innerHTML=
+    `<table><thead><tr><th>body</th><th style="text-align:right">longitude</th>`+
+    `<th style="text-align:right">constellation</th><th style="text-align:right">latitude</th></tr></thead>`+
+    `<tbody>${rows}</tbody></table>`+
+    `<div class="note">`+
+    `civil date asked for: <b>${dateLabel({y:state.y,m:state.m,d:state.d,h:state.h,mi:state.mi})}</b>`+
+    ` (Julian calendar before 15 October 1582, Gregorian after)<br>`+
+    `same instant on the TT scale: <b>${sky.tt_calendar}</b> · ΔT <b>${sky.delta_t_s} s</b><br>`+
+    `JD(TT) ${sky.jd_tt.toFixed(5)} · JD(UT1) ${sky.jd_ut1.toFixed(5)}<br>`+
+    `kernel <code>${sky.kernel.split("/").pop()}</code> · boundary table ${sky.boundary_set} (${sky.boundary_hash})`+
+    `<br>trails: ${SPANS[state.spanIdx][0]}${SPANS[state.spanIdx][1]?" either side of the instant":""}`+
+    `</div>`;
+}
+
+/* ---- controls ------------------------------------------------------------- */
+function readInputs(){
+  state.y=+document.getElementById("yr").value;
+  state.m=+document.getElementById("mo").value;
+  state.d=+document.getElementById("dy").value;
+  state.h=+document.getElementById("hr").value;
+  state.mi=+document.getElementById("mi").value;
+}
+function writeInputs(c){
+  document.getElementById("yr").value=c.y;
+  document.getElementById("mo").value=c.m;
+  document.getElementById("dy").value=c.d;
+  document.getElementById("hr").value=c.h;
+  document.getElementById("mi").value=c.mi;
+}
+function nudge(days){
+  readInputs();
+  const jd=jdFromCivil(state.y,state.m,state.d,state.h,state.mi)+days;
+  writeInputs(civilFromJd(jd));
+  load();
+}
+function setPlaying(on){
+  state.playing=on;
+  document.getElementById("play").textContent=on?"‖ pause":"▶ run";
+  if(state.timer){clearInterval(state.timer);state.timer=null;}
+  if(on) state.timer=setInterval(()=>nudge(STEPS[state.stepIdx][1]),420);
+}
+function init(){
+  const stepsel=document.getElementById("stepsel");
+  STEPS.forEach(([n,v],i)=>{const o=document.createElement("option");o.value=i;o.textContent=n;stepsel.appendChild(o);});
+  stepsel.value=state.stepIdx;
+  stepsel.onchange=e=>{state.stepIdx=+e.target.value;};
+  const spansel=document.getElementById("spansel");
+  SPANS.forEach(([n,v],i)=>{const o=document.createElement("option");o.value=i;o.textContent=n;spansel.appendChild(o);});
+  spansel.value=state.spanIdx;
+  spansel.onchange=e=>{state.spanIdx=+e.target.value;load();};
+
+  document.getElementById("back").onclick=()=>nudge(-STEPS[state.stepIdx][1]);
+  document.getElementById("fwd").onclick=()=>nudge(STEPS[state.stepIdx][1]);
+  document.getElementById("play").onclick=()=>setPlaying(!state.playing);
+  document.getElementById("now").onclick=()=>{const c=civilFromJd(Date.now()/86400000+2440587.5);
+    writeInputs(c);load();};
+  document.getElementById("lattog").onclick=e=>{
+    state.lat=!state.lat;
+    e.target.setAttribute("aria-pressed",state.lat);
+    e.target.textContent=state.lat?"off the ecliptic":"on the ring";
+    load();
+  };
+  ["yr","mo","dy","hr","mi"].forEach(id=>{
+    document.getElementById(id).addEventListener("change",()=>{readInputs();load();});
+  });
+  const start=civilFromJd(Date.now()/86400000+2440587.5);   // today, the honest default
+  writeInputs(start);
+  readInputs();
+  document.getElementById("method").innerHTML=[
+    ["What is computed","Geocentric apparent position in the ecliptic frame of J2000 — longitude for every body, and latitude too if you switch it on. Light-time and aberration are included; the agreement with JPL Horizons itself is better than 0.008°."],
+    ["Why the sectors are uneven","These are the real constellations on the ecliptic, not twelve 30° signs: Scorpio holds 6.6°, Virgo 44.0°, and Ophiuchus sits between them holding 18.6°. The degree ring outside shows how little the twelve signs have to do with the sky."],
+    ["The time scales","A date you type is civil time (UT1); the ephemeris is a function of Terrestrial Time, so ΔT — 25,310 s in 1000 BC, 1,002 s in 1168, about 69 s today — is applied and then printed. Switch on a boundary table and the sector names change because the tables disagree by up to 5° at an edge."],
+    ["Trails","A trail is a run of computed positions over the chosen span. When a planet loops backwards it is retrograding; the Moon's trail is the near-straight one that laps everything else in a month."],
+    ["Precision, honestly","Positions are good to better than 0.01° from the ephemeris, but for old dates the Moon is only good to a few tenths of a degree, because that is how well the Earth's rotation rate is known that far back. The kernel covers 13200 BC to 1969 AD; outside it the engine refuses rather than extrapolating."],
+    ["What this is not","Not astrology, and not a horoscope: no houses, no aspects, no interpretation. Longitude sectors on the ecliptic, which is what a historical document records."],
+  ].map(([t,b])=>`<div><h3>${t}</h3><p>${b}</p></div>`).join("");
+  document.getElementById("foot").innerHTML=
+    `positions API supervised by s6 on this host · <a href="decipherments.html">the same engine dating two Egyptian zodiacs</a> · `+
+    `<a href="https://github.com/sfingali/zodiac-dating-engine">source, MIT</a><br>`+
+    `JPL DE441 (NASA, public domain) · Skyfield · IAU constellation boundaries (Delporte 1930, Roman 1987)`;
+  load();
+}
+init();
+</script>
+</body>
+</html>
