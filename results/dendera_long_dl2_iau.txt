@@ -1,0 +1,69 @@
+  sampled 200000 instants, 0 matched
+  sampled 400000 instants, 0 matched
+  sampled 600000 instants, 0 matched
+  sampled 800000 instants, 0 matched
+  sampled 1000000 instants, 0 matched
+  sampled 1200000 instants, 0 matched
+  sampled 1400000 instants, 0 matched
+  sampled 1600000 instants, 0 matched
+  sampled 1800000 instants, 0 matched
+  sampled 2000000 instants, 0 matched
+  sampled 2200000 instants, 0 matched
+  sampled 2400000 instants, 0 matched
+  sampled 2600000 instants, 0 matched
+  sampled 2800000 instants, 0 matched
+  sampled 3000000 instants, 0 matched
+  sampled 3200000 instants, 0 matched
+  sampled 3400000 instants, 0 matched
+  sampled 3600000 instants, 0 matched
+  sampled 3800000 instants, 0 matched
+  sampled 4000000 instants, 0 matched
+  sampled 4200000 instants, 0 matched
+  sampled 4400000 instants, 0 matched
+  sampled 4600000 instants, 0 matched
+  sampled 4800000 instants, 8 matched
+  sampled 5000000 instants, 8 matched
+  sampled 5200000 instants, 8 matched
+  sampled 5400000 instants, 8 matched
+  sampled 5600000 instants, 8 matched
+  sampled 5800000 instants, 8 matched
+  sampled 5801601 instants, 8 matched
+==============================================================================
+ZODIAC DATING ENGINE - results
+==============================================================================
+boundary set      : iau_j2000 (sha256 3ebe131317550f3b)
+boundary values   : 28.6853 Aries, 53.4157 Taurus, 90.1378 Gemini, 117.9850 Cancer, 138.0353 Leo, 173.8483 Virgo, 217.8086 Libra, 241.0300 Scorpio, 247.6361 Ophiuchus, 266.2355 Sagittarius, 299.6531 Capricorn, 327.4845 Aquarius, 351.6493 Pisces
+ephemeris         : de441_part-1.bsp
+tolerance         : 0 degrees (exact, nothing added)
+search            : JD 990000.0 to 2440400.0, step 6 h
+  Sun      41.05 to 104.06 (width 63.01 deg), best point 71.78
+  Moon     217.81 to 241.03 (width 23.22 deg), best point 229.42
+  Mercury  28.69 to 90.14 (width 61.45 deg), best point 71.78
+  Venus    28.69 to 53.42 (width 24.73 deg), best point 36.85
+  Mars     327.48 to 351.65 (width 24.16 deg), best point 339.57
+  Jupiter  351.65 to 28.69 (width 37.04 deg), best point 28.69
+  Saturn   299.65 to 327.48 (width 27.83 deg), best point 327.48
+order constraint  : Moon < Saturn < Mars < Jupiter < Venus < Mercury=Sun
+note              : Long Dendera zodiac, decipherment variant DL2, as published in Fomenko & Nosovsky, New Chronology of Egypt, Appendix 2 (chronologia.org/nx_egypt/pril2.html; archived copy retrieved 2026-09-16). This is the variant they quote with explicit admissible ranges and a nominated 'best point' for each planet: the Sun from mid-Aries to mid-Gemini with its best point at mid-Taurus, Saturn at the Capricorn/Aquarius boundary, Jupiter at the Pisces/Aries boundary, and so on. The best points are used only to report how far the computed sky sits from the point the decoder nominated; they never influence which instants match. Order for increasing ecliptic longitude: Moon, Saturn, Mars, Jupiter, Venus, Mercury, Sun, with Mercury interchangeable with the Sun.
+------------------------------------------------------------------------------
+instants sampled  : 5801601
+instants matching : 8
+windows found     : 1
+------------------------------------------------------------------------------
+  #   start (JD TT)     end (JD TT)      days mean|dev|  order
+  1   2147782.41326   2147784.30825    1.8950    12.374  ok
+------------------------------------------------------------------------------
+[1] +1168-04-29 21:55:05 (Julian calendar, TT)
+    to +1168-05-01 19:23:52 (Julian calendar, TT)
+    duration 45.480 hours (1.8950 days)
+    geocentric apparent J2000 ecliptic longitudes at midpoint:
+      Sun        51.708 deg  (Aries)   deviation from nominated point -20.068 deg
+      Moon      229.486 deg  (Libra)   deviation from nominated point  +0.066 deg
+      Mercury    42.545 deg  (Aries)   deviation from nominated point -29.232 deg
+      Venus      38.657 deg  (Aries)   deviation from nominated point  +1.811 deg
+      Mars      331.754 deg  (Aquarius)   deviation from nominated point  -7.813 deg
+      Jupiter     1.490 deg  (Pisces)   deviation from nominated point -27.196 deg
+      Saturn    327.051 deg  (Capricorn)   deviation from nominated point  -0.434 deg
+    cyclic order found: Jupiter < Venus < Mercury < Sun < Moon < Saturn < Mars
+    order requirement : satisfied
+wrote /opt/data/tmp/examples/dendera_long_dl2_iau.json

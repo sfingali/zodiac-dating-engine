@@ -1,0 +1,21 @@
+{
+  "boundaries": "iau_j2000",
+  "tolerance_deg": 0.0,
+  "ephemeris": "de441_part-1.bsp",
+  "search": {
+    "from_jd": 990000,
+    "to_jd": 2440400,
+    "step_hours": 6.0
+  },
+  "planets": {
+    "Sun":     {"from": "Aries:0.5",    "to": "Gemini:0.5",  "best": "Taurus:0.5"},
+    "Moon":    {"from": "Libra",        "to": "Scorpio",     "best": "Libra:0.5"},
+    "Mercury": {"from": "Aries",        "to": "Gemini",      "best": "Taurus:0.5"},
+    "Venus":   {"from": "Aries",        "to": "Taurus",      "best": "Aries:0.33"},
+    "Mars":    {"from": "Aquarius",     "to": "Pisces",      "best": "Aquarius:0.5"},
+    "Jupiter": {"from": "Pisces",       "to": "Aries",       "best": "Aries"},
+    "Saturn":  {"from": "Capricorn",    "to": "Aquarius",    "best": "Aquarius"}
+  },
+  "order": [["Moon"], ["Saturn"], ["Mars"], ["Jupiter"], ["Venus"], ["Mercury", "Sun"]],
+  "note": "Long Dendera zodiac, decipherment variant DL2, as published in Fomenko & Nosovsky, New Chronology of Egypt, Appendix 2 (chronologia.org/nx_egypt/pril2.html; archived copy retrieved 2026-09-16). This is the variant they quote with explicit admissible ranges and a nominated 'best point' for each planet: the Sun from mid-Aries to mid-Gemini with its best point at mid-Taurus, Saturn at the Capricorn/Aquarius boundary, Jupiter at the Pisces/Aries boundary, and so on. The best points are used only to report how far the computed sky sits from the point the decoder nominated; they never influence which instants match. Order for increasing ecliptic longitude: Moon, Saturn, Mars, Jupiter, Venus, Mercury, Sun, with Mercury interchangeable with the Sun."
+}

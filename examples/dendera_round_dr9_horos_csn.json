@@ -1,0 +1,21 @@
+{
+  "boundaries": "horos_csn_j2000",
+  "tolerance_deg": 0.0,
+  "ephemeris": "de441_part-1.bsp",
+  "search": {
+    "from_jd": 990000,
+    "to_jd": 2440400,
+    "step_hours": 6.0
+  },
+  "planets": {
+    "Sun":     {"from": "Pisces",    "to": "Pisces"},
+    "Moon":    {"from": "Libra",     "to": "Libra"},
+    "Mercury": {"from": "Aquarius",  "to": "Pisces"},
+    "Venus":   {"from": "Pisces",    "to": "Aries"},
+    "Mars":    {"from": "Capricorn", "to": "Capricorn"},
+    "Jupiter": {"from": "Gemini",    "to": "Cancer"},
+    "Saturn":  {"from": "Virgo",     "to": "Libra"}
+  },
+  "order": [["Venus"], ["Jupiter"], ["Saturn"], ["Moon"], ["Mars"], ["Mercury", "Sun"]],
+  "note": "The same drawing and the same published decipherment (round Dendera zodiac, variant DR9, Fomenko & Nosovsky, New Chronology of Egypt, Appendix 2) run under the boundary table distributed with their own program HOROS, current table CSN (in use from 17.11.2007), instead of the real IAU boundaries. Comparing this run with dendera_round_dr9_iau.json isolates the effect of the boundary table on the dates returned: the tables differ by up to 5 degrees at a sector edge and the HOROS tables merge Ophiuchus into Scorpio and Sagittarius."
+}

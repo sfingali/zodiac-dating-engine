@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zodiac-dating-engine"
+version = "1.0.0"
+description = "Geocentric horoscope dating with real IAU constellation boundaries and JPL ephemerides"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Stephen Fingleton" }]
+keywords = ["astronomy", "ephemeris", "zodiac", "chronology", "skyfield"]
+dependencies = [
+    "skyfield>=1.45",
+    "numpy>=1.24",
+]
+
+[project.scripts]
+zodiac-dating = "zodiac_dating.cli:main"
+
+[tool.setuptools]
+packages = ["zodiac_dating", "zodiac_dating.data"]
+
+[tool.setuptools.package-data]
+"zodiac_dating.data" = ["*.json"]

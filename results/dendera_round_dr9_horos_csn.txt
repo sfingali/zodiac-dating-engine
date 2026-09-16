@@ -1,0 +1,54 @@
+  sampled 200000 instants, 0 matched
+  sampled 400000 instants, 0 matched
+  sampled 600000 instants, 0 matched
+  sampled 800000 instants, 0 matched
+  sampled 1000000 instants, 0 matched
+  sampled 1200000 instants, 0 matched
+  sampled 1400000 instants, 0 matched
+  sampled 1600000 instants, 0 matched
+  sampled 1800000 instants, 0 matched
+  sampled 2000000 instants, 0 matched
+  sampled 2200000 instants, 0 matched
+  sampled 2400000 instants, 0 matched
+  sampled 2600000 instants, 0 matched
+  sampled 2800000 instants, 0 matched
+  sampled 3000000 instants, 0 matched
+  sampled 3200000 instants, 0 matched
+  sampled 3400000 instants, 0 matched
+  sampled 3600000 instants, 0 matched
+  sampled 3800000 instants, 0 matched
+  sampled 4000000 instants, 0 matched
+  sampled 4200000 instants, 0 matched
+  sampled 4400000 instants, 0 matched
+  sampled 4600000 instants, 0 matched
+  sampled 4800000 instants, 0 matched
+  sampled 5000000 instants, 0 matched
+  sampled 5200000 instants, 0 matched
+  sampled 5400000 instants, 0 matched
+  sampled 5600000 instants, 0 matched
+  sampled 5800000 instants, 0 matched
+  sampled 5801601 instants, 0 matched
+==============================================================================
+ZODIAC DATING ENGINE - results
+==============================================================================
+boundary set      : horos_csn_j2000 (sha256 4b51fe5b0aa7906c)
+boundary values   : 31.0000 Aries, 56.0000 Taurus, 92.0000 Gemini, 118.0000 Cancer, 137.0000 Leo, 172.0000 Virgo, 215.0000 Libra, 239.0000 Scorpio, 266.0000 Sagittarius, 296.0000 Capricorn, 326.0000 Aquarius, 349.0000 Pisces
+ephemeris         : de441_part-1.bsp
+tolerance         : 0 degrees (exact, nothing added)
+search            : JD 990000.0 to 2440400.0, step 6 h
+  Sun      349.00 to 31.00 (width 42.00 deg)
+  Moon     215.00 to 239.00 (width 24.00 deg)
+  Mercury  326.00 to 349.00 (width 23.00 deg)
+  Venus    349.00 to 31.00 (width 42.00 deg)
+  Mars     296.00 to 326.00 (width 30.00 deg)
+  Jupiter  92.00 to 118.00 (width 26.00 deg)
+  Saturn   172.00 to 215.00 (width 43.00 deg)
+order constraint  : Venus < Jupiter < Saturn < Moon < Mars < Mercury=Sun
+note              : The same drawing and the same published decipherment (round Dendera zodiac, variant DR9, Fomenko & Nosovsky, New Chronology of Egypt, Appendix 2) run under the boundary table distributed with their own program HOROS, current table CSN (in use from 17.11.2007), instead of the real IAU boundaries. Comparing this run with dendera_round_dr9_iau.json isolates the effect of the boundary table on the dates returned: the tables differ by up to 5 degrees at a sector edge and the HOROS tables merge Ophiuchus into Scorpio and Sagittarius.
+------------------------------------------------------------------------------
+instants sampled  : 5801601
+instants matching : 0
+windows found     : 0
+------------------------------------------------------------------------------
+No instant in the searched range satisfies the specification.
+wrote /opt/data/tmp/examples/dendera_round_dr9_horos_csn.json

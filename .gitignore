@@ -1,0 +1,20 @@
+# Cached JPL ephemeris kernels: large, public domain, downloaded on demand.
+*.bsp
+*.bsp.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Run output
+*.json.out
+runs/
+
+# Editors and OS
+.DS_Store
+*.swp

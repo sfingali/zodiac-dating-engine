@@ -1,0 +1,85 @@
+{
+  "description": "Constellation boundaries along the ecliptic (J2000 ecliptic longitude, latitude 0), derived from Skyfield's bundled IAU constellation boundary map by tools/derive_boundaries.py. Each entry marks where a sector begins: from this longitude until the next entry the ecliptic lies in starts_sector.",
+  "source": "Skyfield constellations.npz, which encodes the IAU (Delporte 1930) boundaries as tabulated in Roman (1987), CDS VI/42, PASP 99, 695.",
+  "epoch": "J2000.0 ecliptic longitude, degrees, geocentric direction",
+  "crossings": [
+    {
+      "longitude_deg": 28.685319,
+      "starts_sector": "Aries",
+      "ends_sector": "Pisces",
+      "iau_abbreviation": "Ari"
+    },
+    {
+      "longitude_deg": 53.415712,
+      "starts_sector": "Taurus",
+      "ends_sector": "Aries",
+      "iau_abbreviation": "Tau"
+    },
+    {
+      "longitude_deg": 90.13782,
+      "starts_sector": "Gemini",
+      "ends_sector": "Taurus",
+      "iau_abbreviation": "Gem"
+    },
+    {
+      "longitude_deg": 117.985046,
+      "starts_sector": "Cancer",
+      "ends_sector": "Gemini",
+      "iau_abbreviation": "Cnc"
+    },
+    {
+      "longitude_deg": 138.035295,
+      "starts_sector": "Leo",
+      "ends_sector": "Cancer",
+      "iau_abbreviation": "Leo"
+    },
+    {
+      "longitude_deg": 173.848271,
+      "starts_sector": "Virgo",
+      "ends_sector": "Leo",
+      "iau_abbreviation": "Vir"
+    },
+    {
+      "longitude_deg": 217.808616,
+      "starts_sector": "Libra",
+      "ends_sector": "Virgo",
+      "iau_abbreviation": "Lib"
+    },
+    {
+      "longitude_deg": 241.030017,
+      "starts_sector": "Scorpio",
+      "ends_sector": "Libra",
+      "iau_abbreviation": "Sco"
+    },
+    {
+      "longitude_deg": 247.636095,
+      "starts_sector": "Ophiuchus",
+      "ends_sector": "Scorpio",
+      "iau_abbreviation": "Oph"
+    },
+    {
+      "longitude_deg": 266.235526,
+      "starts_sector": "Sagittarius",
+      "ends_sector": "Ophiuchus",
+      "iau_abbreviation": "Sgr"
+    },
+    {
+      "longitude_deg": 299.653132,
+      "starts_sector": "Capricorn",
+      "ends_sector": "Sagittarius",
+      "iau_abbreviation": "Cap"
+    },
+    {
+      "longitude_deg": 327.484533,
+      "starts_sector": "Aquarius",
+      "ends_sector": "Capricorn",
+      "iau_abbreviation": "Aqr"
+    },
+    {
+      "longitude_deg": 351.649286,
+      "starts_sector": "Pisces",
+      "ends_sector": "Aquarius",
+      "iau_abbreviation": "Psc"
+    }
+  ]
+}

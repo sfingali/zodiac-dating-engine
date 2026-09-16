@@ -1,0 +1,246 @@
+# zodiac-dating-engine
+
+A sky-dating engine. You describe a planetary configuration — each of the seven
+classical bodies in a constellation or a range of them, plus optionally the order
+they must stand in around the ecliptic — and it returns **every window of time in
+which the real sky matched that description**, computed geocentrically from JPL
+ephemerides under the real IAU constellation boundaries.
+
+It was written to date ancient sky depictions (the Egyptian zodiacs and the like)
+without the two things that make dating software hard to check: hidden slack and
+hidden statistics.
+
+## What it deliberately does not do
+
+* **No hidden tolerance.** A body is in its interval or it is not. A tolerance can
+  be set in the specification, and it is then printed with the results. The
+  default is zero and zero is exact.
+* **No score, no p-value, no "most probable date".** It reports the windows that
+  match, how wide each is, and how far each body sat from any point the source
+  drawing nominated. Whether a coincidence means anything is a question for the
+  reader — an engine that answers it for you has smuggled its author's
+  assumptions into the answer.
+* **No substitute ephemeris.** Real JPL kernels, real constellation boundaries
+  derived from the IAU map, geocentric apparent positions including light-time
+  and aberration.
+* **No silent substitution.** The kernel, its coverage, the boundary table and
+  its hash are printed with every result.
+
+## Install
+
+```bash
+pip install -r requirements.txt          # skyfield, numpy
+# or
+pip install -e .                         # gives you the `zodiac-dating` command
+```
+
+The engine needs a JPL ephemeris kernel. On first use it downloads DE441 part 1
+(about 1.5 GB, public domain) into `~/.cache/zodiac_dating`. To use a copy you
+already have:
+
+```bash
+export ZODIAC_DATING_KERNEL=/path/to/de441_part-1.bsp
+export ZODIAC_DATING_KERNEL_DIR=/path/to/directory   # searched before downloading
+export ZODIAC_DATING_CACHE=/path/to/cache            # where downloads go
+```
+
+DE441 part 1 covers −13200 to 1969, which is what historical dating needs;
+`de440s.bsp` or `de421.bsp` serve modern dates.
+
+## Quick start
+
+```bash
+python -m zodiac_dating boundaries                       # print every boundary table in use
+python -m zodiac_dating selftest --jd 2437000.5          # seven longitudes for one instant
+python -m zodiac_dating run examples/dendera_round_dr9_iau.json
+python tools/smoke.py                                    # offline checks, exit 0 on pass
+python tools/crosscheck_horizons.py                      # compare against JPL Horizons (network)
+python tools/delta_t.py                                  # Delta T across the covered span
+```
+
+`run` accepts overrides without touching the file:
+`--from-jd`, `--to-jd`, `--step-hours`, `--tolerance`, `--ephemeris`,
+`--json-out`.
+
+## How a specification is written
+
+```json
+{
+  "boundaries": "iau_j2000",
+  "tolerance_deg": 0.0,
+  "ephemeris": "de441_part-1.bsp",
+  "search": {"from_jd": 990000, "to_jd": 2440400, "step_hours": 6.0},
+  "planets": {
+    "Sun":     {"from": "Pisces",    "to": "Pisces"},
+    "Moon":    {"from": "Libra",     "to": "Libra"},
+    "Mercury": {"from": "Aquarius",  "to": "Pisces"},
+    "Venus":   {"from": "Pisces",    "to": "Aries"},
+    "Mars":    {"from": "Capricorn", "to": "Capricorn"},
+    "Jupiter": {"from": "Gemini",    "to": "Cancer"},
+    "Saturn":  {"from": "Virgo",     "to": "Libra"}
+  },
+  "order": [["Venus"], ["Jupiter"], ["Saturn"], ["Moon"], ["Mars"], ["Mercury", "Sun"]],
+  "note": "where this description comes from"
+}
+```
+
+* **Intervals** run from `from` to `to` inclusive, counter-clockwise in
+  increasing longitude, wrapping through 360 when they have to.
+* **A sector named once** (`"from": "Pisces", "to": "Pisces"`) means that whole
+  sector, because that is how the published tables phrase it. `"Pisces:1.0"` is
+  its far edge; `"Taurus:0.5"` is its middle.
+* **`free`** releases a body from any constraint: `{"free": true}`; a body not
+  mentioned at all is also unconstrained.
+* **`best`** is the point the drawing's decoder nominated. It is used only to
+  report how far the computed sky sat from it. It never influences matching.
+* **`order`** is the sequence of the bodies around the ecliptic by increasing
+  longitude, checked cyclically. Bodies in one group (`["Mercury", "Sun"]`) may
+  appear in either order, which expresses "these two are drawn interchangeably".
+* **`step_hours`** is how finely the range is sampled. Window edges are then
+  refined by bisection to about a second, so the step does not limit the reported
+  times — but a step longer than the shortest window can step over it entirely.
+  With constellation-scale constraints, half a day is safe for the outer bodies;
+  the Moon moves 13.2° per day, so keep the step well under a day when the Moon
+  constrains the answer.
+
+## Boundary sets
+
+The table in force is named and hashed in the output.
+
+| Name | Sectors | What it is |
+|---|---|---|
+| `iau_j2000` | 13 | The real constellation boundaries on the ecliptic, including **Ophiuchus**, derived by `tools/derive_boundaries.py` from the IAU map (Delporte 1930, as tabulated by Roman 1987, CDS VI/42). |
+| `horos_cs_j2000` | 12 | The boundary table distributed with Fomenko & Nosovsky's program HOROS, old **CS** table, used 2002–17.11.2007. |
+| `horos_csn_j2000` | 12 | The same program's current **CSN** table, in use from 17.11.2007. |
+| custom | any | Any set of crossings you supply in the specification, with its provenance, e.g. to test a published table against the real sky. |
+
+The IAU set as derived (J2000 ecliptic longitude, degrees, each value being where
+a sector begins):
+
+```
+Aries 28.6853   Taurus 53.4157   Gemini 90.1378   Cancer 117.9850
+Leo 138.0353    Virgo 173.8483   Libra 217.8086   Scorpio 241.0300
+Ophiuchus 247.6361   Sagittarius 266.2355   Capricorn 299.6531
+Aquarius 327.4845    Pisces 351.6493
+```
+
+Ophiuchus holds 18.6° of the ecliptic. The two HOROS tables do not contain it:
+they assign those degrees to Scorpio and Sagittarius. This engine keeps it,
+because it is there in the sky — and both tables are available so that a result
+published under HOROS can be compared on HOROS's own terms instead of argued
+with. `examples/dendera_round_dr9_iau.json` and
+`examples/dendera_round_dr9_horos_csn.json` are the same drawing and the same
+published decipherment run under each, which isolates what the boundary table
+alone does to the answer.
+
+## What an answer means
+
+```bash
+python -m zodiac_dating run examples/dendera_round_dr9_iau.json
+```
+
+prints, for each window: the Julian-calendar start and end (TT), the duration in
+hours, the seven geocentric apparent J2000 ecliptic longitudes at the midpoint
+with the sector each falls in, the deviation from any nominated `best` point, and
+whether the order constraint held. A window is a real interval: if the
+configuration stood for three days, three days is the answer, and a program that
+reports one date and time has thrown that width away.
+
+## Accuracy, stated plainly
+
+* **Ephemeris and frame handling: better than 0.01°.** `tools/crosscheck_horizons.py`
+  asks JPL Horizons itself for geocentric vectors and converts them to J2000
+  ecliptic longitude independently of Skyfield's frame code; the residual against
+  this engine's apparent longitudes runs to about 0.008° at worst, which is the
+  known difference between a geometric and an apparent position (light-time and
+  aberration), not an error in the ephemeris. `tools/smoke.py` locks that in as a
+  regression test with the Horizons values hard-coded.
+* **ΔT is the real limit, and only for old dates.** Dates are converted to
+  Terrestrial Time using Skyfield's ΔT model, because the ephemerides are
+  functions of TT while documents are in civil time. The Moon moves 0.549° per
+  hour, so a disagreement of 1,000 s between ΔT models — the order of the spread
+  across published models in the first millennium BC — moves the Moon by about
+  0.15°, while the planets move by amounts too small to matter. `tools/delta_t.py`
+  prints the model's values across the covered span (25,310 s at −1000, 10,430 s
+  at +1, 1,650 s at 1000, 109 s at 1600) so that the assumption is visible rather
+  than buried. A lunar longitude in antiquity should be read as good to a few
+  tenths of a degree, not to 0.01°.
+* **What the engine cannot tell you.** Whether a configuration is remarkable. It
+  reports windows; the number of days per century on which such a configuration
+  occurs is a property of the sky, and anyone claiming a dating is interesting
+  owes you that number.
+
+## Worked examples
+
+Three specifications are bundled, all transcribed from published decipherment
+tables with their variant codes (see `REFERENCES.md`):
+
+| File | Drawing and variant | Boundary set |
+|---|---|---|
+| `examples/dendera_round_dr9_iau.json` | Round Dendera, DR9 | real IAU |
+| `examples/dendera_round_dr9_horos_csn.json` | Round Dendera, DR9 | HOROS current (CSN) |
+| `examples/dendera_long_dl2_iau.json` | Long Dendera, DL2 | real IAU |
+
+Every one of them was run over the whole span of DE441 part 1 — JD 990000 to
+2440400, about −13000 to 1969 — sampled every 6 hours, 5,801,601 instants. The
+full reports are in `results/`, and `results/run_examples.sh` regenerates them.
+No tolerance is applied unless a run says so.
+
+| Specification | Boundary set | Tolerance | Windows found |
+|---|---|---|---|
+| Long Dendera DL2 | real IAU | 0° | **1**: 29 Apr – 1 May 1168, 45.5 h |
+| Round Dendera DR9 | real IAU | 0° | **0** |
+| Round Dendera DR9 | HOROS CSN | 0° | **0** |
+| Round Dendera DR9 | real IAU | 5° | **2**: 17–19 Feb −169, 6–9 Mar 1836 |
+| Round Dendera DR9 | HOROS CSN | 5° | **2**: 17–19 Feb 271, 6–7 Mar 1836 |
+
+Three things are worth reading out of that table.
+
+**The long zodiac reproduces.** Under real boundaries, with nothing widened, the
+DL2 decipherment admits exactly one window in thirteen thousand years: 29 April
+to 1 May 1168. Fomenko and Nosovsky publish the long zodiac's exhaustive
+solution as 22–26 April 1168. Same year, same event, reached by a different
+implementation. The seven-day offset between the two windows is left as it
+stands rather than tuned away — every number that produced each window is
+printed, so it is a question that can be answered rather than a discrepancy to
+be taken on trust.
+
+**The round zodiac's DR9 variant produces nothing at all on an exact reading**,
+under the real boundaries or under HOROS's own current table — so the variant as
+published is not merely rare, it never happens. It only yields dates when
+HOROS's documented preliminary tolerance of ±5° is applied, at which point two
+appear.
+
+**The boundary table moves ancient dates by centuries.** With ±5° allowed, the
+same drawing and the same published variant date to −169 or to 271 depending
+solely on whether the real IAU boundaries or the HOROS table is used; the
+eighteenth-century window is unaffected. That is the size of the effect the
+choice of boundary table has on a dating, and it is why this engine prints which
+one it used, with its hash.
+
+
+## Files
+
+```
+zodiac_dating/
+  ephemeris.py       kernels, geocentric apparent longitudes, kernel discovery
+  boundaries.py      the boundary tables, and the provenance of each
+  specifications.py  the input format, and its semantics
+  engine.py          the scan, window edges, and the report
+  cli.py             command line
+  data/              the derived IAU boundary table
+tools/
+  derive_boundaries.py    regenerate the IAU table from the IAU map
+  smoke.py                offline self-test, exit 0 on pass
+  crosscheck_horizons.py  compare against JPL Horizons
+  delta_t.py              print the Delta T model in use
+```
+
+## Licence and attribution
+
+MIT — see `LICENCE`. Built on Skyfield (MIT), JPL DE440/DE441 (NASA, public
+domain), and the IAU constellation boundaries (Delporte 1930; Roman 1987, CDS
+VI/42). The HOROS boundary tables are reproduced as data with their provenance
+and switchover date; no code from HOROS, or from any other dating program, is
+used here. Full citations, including the published Dendera tables the examples
+come from, are in `REFERENCES.md`.

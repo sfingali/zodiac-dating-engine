@@ -1,0 +1,21 @@
+{
+  "boundaries": "iau_j2000",
+  "tolerance_deg": 0.0,
+  "ephemeris": "de441_part-1.bsp",
+  "search": {
+    "from_jd": 990000,
+    "to_jd": 2440400,
+    "step_hours": 6.0
+  },
+  "planets": {
+    "Sun":     {"from": "Pisces",    "to": "Pisces"},
+    "Moon":    {"from": "Libra",     "to": "Libra"},
+    "Mercury": {"from": "Aquarius",  "to": "Pisces"},
+    "Venus":   {"from": "Pisces",    "to": "Aries"},
+    "Mars":    {"from": "Capricorn", "to": "Capricorn"},
+    "Jupiter": {"from": "Gemini",    "to": "Cancer"},
+    "Saturn":  {"from": "Virgo",     "to": "Libra"}
+  },
+  "order": [["Venus"], ["Jupiter"], ["Saturn"], ["Moon"], ["Mars"], ["Mercury", "Sun"]],
+  "note": "Round Dendera zodiac, decipherment variant DR9, as published in Fomenko & Nosovsky, New Chronology of Egypt, Appendix 2 (chronologia.org/nx_egypt/pril2.html; archived copy retrieved 2026-09-16). Venus/Jupiter/Saturn/Moon/Mars/Mercury/Sun are the order stated there for increasing ecliptic longitude, with Mercury interchangeable with the Sun, which is drawn on both sides of it. Run under the real IAU constellation boundaries. The published tables phrase each planet's position as a constellation or a pair of constellations; no tolerance is applied, and window edges are refined by bisection, so the step here only sets how finely the search is sampled."
+}
