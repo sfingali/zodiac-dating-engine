@@ -73,10 +73,12 @@ def cmd_selftest(args):
     """Compute the seven longitudes for a known instant and echo them."""
     from .ephemeris import load_ephemeris, BODIES
     import numpy as np
-    eph = load_ephemeris(args.ephemeris or "de441_part-1.bsp")
+    eph = load_ephemeris(args.ephemeris or None)
     jd = args.jd
     lons = eph.longitudes(np.array([jd]))
-    print(f"ephemeris: {eph.filename}   JD(TT) {jd}")
+    print(f"ephemeris: {eph.filename}")
+    print(f"  read from: {eph.path}")
+    print(f"  JD(TT) {jd}")
     for b in BODIES:
         print(f"  {b:<8s} {float(lons[b][0]):9.5f}")
     return 0

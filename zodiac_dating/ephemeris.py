@@ -50,6 +50,17 @@ def cache_dir() -> Path:
     return Path(os.environ.get("ZODIAC_DATING_CACHE") or DEFAULT_CACHE).expanduser()
 
 
+def default_ephemeris() -> str:
+    """The kernel to use when a caller names none.
+
+    ``$ZODIAC_DATING_KERNEL`` if it is set, otherwise ``DEFAULT_EPHEMERIS``.  This
+    is read at call time, not at import, so exporting the variable takes effect
+    without editing anything - including the example specifications, which name no
+    kernel and therefore follow the environment.
+    """
+    return os.environ.get("ZODIAC_DATING_KERNEL") or DEFAULT_EPHEMERIS
+
+
 def kernel_dirs():
     dirs = [Path(d).expanduser() for d in DEFAULT_KERNEL_DIRS]
     extra = os.environ.get(KERNEL_DIRS_ENV, "")
@@ -89,8 +100,9 @@ class Ephemeris:
     path: str                  # where it was actually read from
 
     @classmethod
-    def load(cls, filename: str = DEFAULT_EPHEMERIS):
+    def load(cls, filename: str = None):
         from skyfield.api import Loader
+        filename = filename or default_ephemeris()
         ts = Loader(str(cache_dir())).timescale()
         ts.julian_calendar_cutoff = -10**9   # always the Julian calendar, no silent switch
         resolved = resolve_kernel(filename)
@@ -146,5 +158,10 @@ class Ephemeris:
 
 
 @lru_cache(maxsize=4)
-def load_ephemeris(filename: str = DEFAULT_EPHEMERIS) -> Ephemeris:
-    return Ephemeris.load(filename)
+def load_ephemeris(filename: str = None) -> Ephemeris:
+    """Load a kernel, by path, by known JPL name, or the default when omitted.
+
+    The cache key is the name as requested, so passing None and passing the
+    resolved default are two entries; both are cheap after the first load.
+    """
+    return Ephemeris.load(filename or default_ephemeris())

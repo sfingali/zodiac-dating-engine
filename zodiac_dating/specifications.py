@@ -46,7 +46,7 @@ from dataclasses import dataclass, field
 import json
 
 from .boundaries import BoundarySet, get_set
-from .ephemeris import BODIES
+from .ephemeris import BODIES, default_ephemeris
 
 
 class SpecError(ValueError):
@@ -83,7 +83,7 @@ class Spec:
     boundaries: BoundarySet
     rules: dict                     # body -> PlanetRule
     tolerance_deg: float = 0.0
-    ephemeris: str = "de441_part-1.bsp"
+    ephemeris: str = field(default_factory=default_ephemeris)
     from_jd: float = None
     to_jd: float = None
     step_hours: float = 1.0
@@ -122,7 +122,7 @@ class Spec:
         return cls(boundaries=bset,
                    rules=rules,
                    tolerance_deg=float(data.get("tolerance_deg", 0.0)),
-                   ephemeris=data.get("ephemeris", "de441_part-1.bsp"),
+                   ephemeris=(data.get("ephemeris") or default_ephemeris()),
                    from_jd=search.get("from_jd"),
                    to_jd=search.get("to_jd"),
                    step_hours=float(search.get("step_hours", 1.0)),

@@ -44,6 +44,12 @@ export ZODIAC_DATING_KERNEL_DIR=/path/to/directory   # searched before downloadi
 export ZODIAC_DATING_CACHE=/path/to/cache            # where downloads go
 ```
 
+`ZODIAC_DATING_KERNEL` is honoured everywhere, including by the example
+specifications, which name no kernel and therefore follow the environment. A
+kernel named *inside* a specification overrides it. Nothing is fetched while a
+usable kernel is already on disk: the path actually read is printed with every
+run (`selftest` shows it explicitly).
+
 DE441 part 1 covers −13200 to 1969, which is what historical dating needs;
 `de440s.bsp` or `de421.bsp` serve modern dates.
 
