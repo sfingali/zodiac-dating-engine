@@ -102,6 +102,13 @@ python tools/delta_t.py                                  # Delta T across the co
 * **`order`** is the sequence of the bodies around the ecliptic by increasing
   longitude, checked cyclically. Bodies in one group (`["Mercury", "Sun"]`) may
   appear in either order, which expresses "these two are drawn interchangeably".
+* **`enforce_order`** (default `false`) decides what the order constraint *does*.
+  By default the engine reports, for every window it finds, whether the published
+  order held — it does not throw the window away for it, and the report says
+  `ok` or `VIOLATED`. Set `enforce_order` (or pass `--enforce-order`) and an
+  instant only matches if the order holds too. The distinction is not academic:
+  the round-zodiac DR9 window at 1836 satisfies the planet intervals but
+  **violates** the published order, so it survives one reading and not the other.
 * **`step_hours`** is how finely the range is sampled. Window edges are then
   refined by bisection to about a second, so the step does not limit the reported
   times — but a step longer than the shortest window can step over it entirely.
@@ -225,6 +232,21 @@ choice of boundary table has on a dating, and it is why this engine prints which
 one it used, with its hash.
 
 
+## Visualiser
+
+`viz/build_visualiser.py` writes a single self-contained page — no build step, no
+CDN, no server-side compute at request time — showing the wheels, the constraint
+bands, the real (uneven) constellation sectors including Ophiuchus, a scrubber
+over each window, and a timeline of every window found in the 13,000-year span.
+It reads the reports in `results/` and recomputes the match state with the
+engine's own rule objects, so the page cannot disagree with the reports.
+
+```bash
+python viz/build_visualiser.py --out index.html      # needs the kernel, as usual
+```
+
+A copy runs at <https://stephenfingleton.com/zodiac/>.
+
 ## Files
 
 ```
@@ -240,6 +262,8 @@ tools/
   smoke.py                offline self-test, exit 0 on pass
   crosscheck_horizons.py  compare against JPL Horizons
   delta_t.py              print the Delta T model in use
+viz/
+  build_visualiser.py     generate the self-contained visualiser page
 ```
 
 ## Licence and attribution

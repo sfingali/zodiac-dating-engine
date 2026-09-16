@@ -141,6 +141,17 @@ def scan(spec: Spec, progress=None):
         if progress:
             progress(done, int(mask[:done].sum()))
 
+    # The order constraint is reported for every window; it is only matched on
+    # when the specification asks for it, because the published tables state an
+    # order that not every candidate window satisfies (see README).
+    if spec.enforce_order and spec.order:
+        for i in np.nonzero(mask)[0]:
+            lons_i = eph.longitudes(np.array([jds[i]]))
+            present = sorted((b for b in BODIES if b in spec.rules),
+                             key=lambda b: float(lons_i[b][0]))
+            if not _cyclic_order_match(present, spec.order):
+                mask[i] = False
+
     windows = []
     i = 0
     while i < len(mask):

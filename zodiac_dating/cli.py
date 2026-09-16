@@ -26,6 +26,8 @@ def cmd_run(args):
         spec.tolerance_deg = args.tolerance
     if args.ephemeris:
         spec.ephemeris = args.ephemeris
+    if args.enforce_order:
+        spec.enforce_order = True
 
     def progress(n, k):
         print(f"  sampled {n} instants, {k} matched", file=sys.stderr)
@@ -96,6 +98,9 @@ def main(argv=None):
     r.add_argument("--to-jd", type=float)
     r.add_argument("--tolerance", type=float)
     r.add_argument("--ephemeris")
+    r.add_argument("--enforce-order", action="store_true",
+                   help="require the published order of the bodies around the "
+                        "ecliptic, not merely report whether it held")
     r.add_argument("--json-out")
     r.set_defaults(func=cmd_run)
 

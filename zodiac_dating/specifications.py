@@ -88,6 +88,7 @@ class Spec:
     to_jd: float = None
     step_hours: float = 1.0
     order: list = field(default_factory=list)
+    enforce_order: bool = False
     note: str = ""
 
     # ------------------------------------------------------------------
@@ -127,6 +128,7 @@ class Spec:
                    to_jd=search.get("to_jd"),
                    step_hours=float(search.get("step_hours", 1.0)),
                    order=data.get("order", []),
+                   enforce_order=bool(data.get("enforce_order", False)),
                    note=data.get("note", ""))
 
     @classmethod
@@ -163,7 +165,9 @@ class Spec:
                              f"(width {(rule.end_deg - rule.start_deg) % 360:.2f} deg){best}")
         if self.order:
             lines.append("order constraint  : " +
-                         " < ".join("=".join(g) for g in self.order))
+                         " < ".join("=".join(g) for g in self.order) +
+                         ("   [ENFORCED]" if self.enforce_order
+                          else "   [reported only, not enforced - set enforce_order to match on it]"))
         if self.note:
             lines.append(f"note              : {self.note}")
         return "\n".join(lines)
