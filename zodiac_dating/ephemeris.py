@@ -30,8 +30,7 @@ DEFAULT_EPHEMERIS = "de441_part-1.bsp"
 DEFAULT_CACHE = "~/.cache/zodiac_dating"
 # Existing kernels are also looked for here(s) before any download is attempted.
 KERNEL_DIRS_ENV = "ZODIAC_DATING_KERNEL_DIR"
-DEFAULT_KERNEL_DIRS = ("~/.local/share/zodiac_dating", "/usr/local/share/zodiac_dating",
-                       "/opt/data/fomenko_check/sescc")
+DEFAULT_KERNEL_DIRS = ("~/.local/share/zodiac_dating", "/usr/local/share/zodiac_dating")
 
 EPHEMERIS_URLS = {
     "de441_part-1.bsp":

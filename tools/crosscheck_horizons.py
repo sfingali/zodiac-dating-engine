@@ -4,6 +4,14 @@ Independence: Horizons serves its own SPK/ephemeris chain and its own light-time
 and aberration handling.  We ask it for ICRF vectors and turn them into J2000
 ecliptic longitudes ourselves, with the fixed mean obliquity of J2000, so the
 comparison does not depend on Skyfield's frame code either.
+
+Note on what the comparison shows: Horizons vectors are *geometric*, while the
+engine reports *apparent* longitudes, so a residual of up to about 0.01 deg is
+expected and is the known light-time and aberration difference, not an error.
+Horizons may also decline to serve some of the outer bodies for the most ancient
+dates; the tool reports that as "query failed" rather than hiding it.
+
+Needs network access.
 """
 import json, math, os, sys, urllib.parse, urllib.request
 from pathlib import Path
