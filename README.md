@@ -62,6 +62,8 @@ python -m zodiac_dating run examples/dendera_round_dr9_iau.json
 python tools/smoke.py                                    # offline checks, exit 0 on pass
 python tools/crosscheck_horizons.py                      # compare against JPL Horizons (network)
 python tools/delta_t.py                                  # Delta T across the covered span
+python tools/render_png.py --year 1168 --month 4 --day 22 --hour 21 --minute 55 \
+    --out plate.png                                       # a horoscope as a PNG plate
 ```
 
 `run` accepts overrides without touching the file:
@@ -286,6 +288,27 @@ easily got wrong:
   prints can be typed back in and land on the same instant. `tools/delta_t.py`
   shows the model across the covered span.
 
+## Plates
+
+`tools/render_png.py` draws a horoscope as a PNG, for a document or a print:
+real sector widths, degree ring, the seven bodies with their ecliptic latitudes,
+and the instant in the centre with the calendar and Delta T. It reads nothing but
+the engine - positions from the kernel, sectors from the boundary set, constraint
+tests from the same rule objects the search uses - so a plate cannot disagree with
+a report. `--spec` adds a *required* column and marks each body satisfied or
+violated, which turns the plate into a picture of a dating.
+
+```sh
+python tools/render_png.py --year 1168 --month 4 --day 22 --hour 21 --minute 55 --out plate.png
+python tools/render_png.py --year 1168 --month 4 --day 22 --hour 21 --minute 55 \
+    --spec examples/dendera_long_dl2_iau.json --out dl2.png
+python tools/render_png.py --year 2026 --month 9 --day 16 --kernel de440s.bsp --out today.png
+```
+
+Three are in `results/plates/`: the long zodiac as its own dating requires it
+(1168), the same constraints at the instant 1,151 years earlier (17 CE, where
+three of the seven bodies violate them), and the plain sky.
+
 ## Corrections made while building this
 
 Kept here because both changed published numbers, and a reader comparing an
@@ -324,6 +347,7 @@ viz/
   sky.html                the sky view (served at /zodiac/ alongside the API)
 serve/
   app.py                  positions API behind the sky view
+results/plates/           rendered horoscope plates (PNG)
 ```
 
 ## Licence and attribution
